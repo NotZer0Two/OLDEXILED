@@ -11,6 +11,8 @@ namespace Exiled.API.Features
     using System.Collections.Generic;
     using System.Reflection;
 
+    using Exiled.API.Enums;
+
     using GameCore;
 
     using Interfaces;
@@ -266,6 +268,26 @@ namespace Exiled.API.Features
         /// <param name="sender">The <see cref="CommandSender"/> running the command.</param>
         /// <returns>Command response, if there is one; otherwise, <see langword="null"/>.</returns>
         public static string ExecuteCommand(string command, CommandSender sender = null) => GameCore.Console.singleton.TypeCommand(command, sender);
+
+        /// <summary>
+        /// Emulation of the method SCP:SL uses to change scene.
+        /// </summary>
+        /// <param name="newSceneName">The new Scene the client will load.</param>
+        public static void ChangeSceneToAllClients(string newSceneName)
+        {
+            SceneMessage message = new()
+            {
+                sceneName = newSceneName,
+            };
+
+            NetworkServer.SendToAll(message);
+        }
+
+        /// <summary>
+        /// Emulation of the method SCP:SL uses to change scene.
+        /// </summary>
+        /// <param name="scene">The new Scene the client will load.</param>
+        public static void ChangeSceneToAllClients(ScenesType scene) => ChangeSceneToAllClients(scene.ToString());
 
         /// <summary>
         /// Safely gets an <see cref="object"/> from <see cref="SessionVariables"/>, then casts it to <typeparamref name="T"/>.
