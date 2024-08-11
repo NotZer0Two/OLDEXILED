@@ -358,6 +358,20 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
+        /// Emulation of the method SCP:SL uses to change scene.
+        /// </summary>
+        /// <param name="scene">The new Scene the client will load.</param>
+        public static void ChangeSceneToAllClients(ScenesType scene)
+        {
+            SceneMessage message = new()
+            {
+                sceneName = scene.ToString(),
+            };
+
+            NetworkServer.SendToAll(message);
+        }
+
+        /// <summary>
         /// Send fake values to client's <see cref="SyncVarAttribute"/>.
         /// </summary>
         /// <param name="target">Target to send.</param>
