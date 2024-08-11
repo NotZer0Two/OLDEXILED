@@ -67,6 +67,8 @@ namespace Exiled.API.Features
 
         private static AmbientSoundPlayer ambientSoundPlayer;
 
+        private static SqueakSpawner squeakSpawner;
+
         /// <summary>
         /// Gets the tantrum prefab.
         /// </summary>
@@ -153,7 +155,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets the <see cref="global::SqueakSpawner"/>.
         /// </summary>
-        public static SqueakSpawner SqueakSpawner => Object.FindObjectOfType<SqueakSpawner>();
+        public static SqueakSpawner SqueakSpawner => squeakSpawner ??= Object.FindObjectOfType<SqueakSpawner>();
 
         /// <summary>
         /// Broadcasts a message to all <see cref="Player">players</see>.
