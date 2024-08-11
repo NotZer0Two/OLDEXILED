@@ -151,6 +151,11 @@ namespace Exiled.API.Features
         public static AmbientSoundPlayer AmbientSoundPlayer => ambientSoundPlayer ??= ReferenceHub.HostHub.GetComponent<AmbientSoundPlayer>();
 
         /// <summary>
+        /// Gets the <see cref="global::SqueakSpawner"/>.
+        /// </summary>
+        public static SqueakSpawner SqueakSpawner => Object.FindObjectOfType<SqueakSpawner>();
+
+        /// <summary>
         /// Broadcasts a message to all <see cref="Player">players</see>.
         /// </summary>
         /// <param name="broadcast">The <see cref="Features.Broadcast"/> to be broadcasted.</param>
@@ -423,10 +428,8 @@ namespace Exiled.API.Features
         /// <param name="mice">Amount of mice you want to spawn.</param>
         public static void SpawnMice(byte mice = 1)
         {
-            SqueakSpawner squeakSpawner = UnityEngine.Object.FindObjectOfType<SqueakSpawner>();
-
-            squeakSpawner.NetworksyncSpawn = mice;
-            squeakSpawner.SyncMouseSpawn(0, squeakSpawner.NetworksyncSpawn);
+            SqueakSpawner.NetworksyncSpawn = mice;
+            SqueakSpawner.SyncMouseSpawn(0, SqueakSpawner.NetworksyncSpawn);
         }
 
         /// <summary>
