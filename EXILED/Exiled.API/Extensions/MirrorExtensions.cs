@@ -14,6 +14,7 @@ namespace Exiled.API.Extensions
     using System.Reflection;
     using System.Reflection.Emit;
     using System.Text;
+
     using Exiled.API.Enums;
     using Features;
     using Features.Pools;
@@ -345,7 +346,7 @@ namespace Exiled.API.Extensions
         /// <summary>
         /// Sends to the player a Fake Change Scene.
         /// </summary>
-        /// <param name="player">The player to send the Scene</param>
+        /// <param name="player">The player to send the Scene.</param>
         /// <param name="newSceneName">The new Scene the client will load.</param>
         public static void SendFakeSceneLoading(this Player player, ScenesType newSceneName)
         {
