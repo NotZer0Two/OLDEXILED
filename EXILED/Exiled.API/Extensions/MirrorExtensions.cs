@@ -343,6 +343,44 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
+        /// Moves object for the player.
+        /// </summary>
+        /// <param name="player">Target to send.</param>
+        /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to move.</param>
+        /// <param name="pos">The position to change.</param>
+        public static void MoveNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 pos)
+        {
+            identity.gameObject.transform.position = pos;
+            ObjectDestroyMessage objectDestroyMessage = new()
+            {
+                netId = identity.netId,
+            };
+
+            player.Connection.Send(objectDestroyMessage, 0);
+            SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, player.Connection });
+        }
+
+        /// <summary>
+        /// Moves object for all the players.
+        /// </summary>
+        /// <param name="identity">The <see cref="NetworkIdentity"/> to move.</param>
+        /// <param name="pos">The position to change.</param>
+        public static void MoveNetworkIdentityObject(this NetworkIdentity identity, Vector3 pos)
+        {
+            identity.gameObject.transform.position = pos;
+            ObjectDestroyMessage objectDestroyMessage = new()
+            {
+                netId = identity.netId,
+            };
+
+            foreach (Player ply in Player.List)
+            {
+                ply.Connection.Send(objectDestroyMessage, 0);
+                SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, ply.Connection });
+            }
+        }
+
+        /// <summary>
         /// Send fake values to client's <see cref="SyncVarAttribute"/>.
         /// </summary>
         /// <param name="target">Target to send.</param>
