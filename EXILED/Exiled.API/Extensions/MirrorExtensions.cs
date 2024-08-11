@@ -348,7 +348,7 @@ namespace Exiled.API.Extensions
         /// <param name="player">Target to send.</param>
         /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to scale.</param>
         /// <param name="scale">The scale the object needs to be.</param>
-        public static void MoveNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 scale)
+        public static void ScaleNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 scale)
         {
             identity.gameObject.transform.localPosition = scale;
             ObjectDestroyMessage objectDestroyMessage = new()
@@ -365,7 +365,7 @@ namespace Exiled.API.Extensions
         /// </summary>
         /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to scale.</param>
         /// <param name="scale">The scale the object needs to be.</param>
-        public static void MoveNetworkIdentityObject(this NetworkIdentity identity, Vector3 scale)
+        public static void ScaleNetworkIdentityObject(this NetworkIdentity identity, Vector3 scale)
         {
             identity.gameObject.transform.localPosition = scale;
             ObjectDestroyMessage objectDestroyMessage = new()
