@@ -427,9 +427,12 @@ namespace Exiled.API.Features
         /// <summary>
         /// Spawns a Mice inside the <see cref="RoomType.EzShelter"/>.
         /// </summary>
-        /// <param name="mice">Amount of mice you want to spawn.</param>
+        /// <param name="mice">The type of mice you want to spawn..</param>
         public static void SpawnMice(byte mice = 1)
         {
+            if (mice > SqueakSpawner.mice.Length)
+                new OverflowException($"The mice type are from 1 to {SqueakSpawner.mice.Length}");
+
             SqueakSpawner.NetworksyncSpawn = mice;
             SqueakSpawner.SyncMouseSpawn(0, SqueakSpawner.NetworksyncSpawn);
         }
