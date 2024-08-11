@@ -10,6 +10,7 @@ namespace Exiled.API.Features.Pickups
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using Exiled.API.Extensions;
     using Exiled.API.Features.Core;
     using Exiled.API.Features.Pickups.Projectiles;
