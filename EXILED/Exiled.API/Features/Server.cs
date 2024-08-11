@@ -272,22 +272,16 @@ namespace Exiled.API.Features
         /// <summary>
         /// Emulation of the method SCP:SL uses to change scene.
         /// </summary>
-        /// <param name="newSceneName">The new Scene the client will load.</param>
-        public static void ChangeSceneToAllClients(string newSceneName)
+        /// <param name="scene">The new Scene the client will load.</param>
+        public static void ChangeSceneToAllClients(ScenesType scene)
         {
             SceneMessage message = new()
             {
-                sceneName = newSceneName,
+                sceneName = scene.ToString(),
             };
 
             NetworkServer.SendToAll(message);
         }
-
-        /// <summary>
-        /// Emulation of the method SCP:SL uses to change scene.
-        /// </summary>
-        /// <param name="scene">The new Scene the client will load.</param>
-        public static void ChangeSceneToAllClients(ScenesType scene) => ChangeSceneToAllClients(scene.ToString());
 
         /// <summary>
         /// Safely gets an <see cref="object"/> from <see cref="SessionVariables"/>, then casts it to <typeparamref name="T"/>.
