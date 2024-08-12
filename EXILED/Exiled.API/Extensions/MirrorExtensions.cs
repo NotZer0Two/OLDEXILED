@@ -342,7 +342,6 @@ namespace Exiled.API.Extensions
             }
         }
 
-
         /// <summary>
         /// Scales an object for the specified player.
         /// </summary>
