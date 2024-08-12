@@ -350,7 +350,7 @@ namespace Exiled.API.Extensions
         /// <param name="scale">The scale the object needs to be.</param>
         public static void ScaleNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 scale)
         {
-            identity.gameObject.transform.localPosition = scale;
+            identity.gameObject.transform.localScale = scale;
             ObjectDestroyMessage objectDestroyMessage = new()
             {
                 netId = identity.netId,
@@ -367,7 +367,7 @@ namespace Exiled.API.Extensions
         /// <param name="scale">The scale the object needs to be.</param>
         public static void ScaleNetworkIdentityObject(this NetworkIdentity identity, Vector3 scale)
         {
-            identity.gameObject.transform.localPosition = scale;
+            identity.gameObject.transform.localScale = scale;
             ObjectDestroyMessage objectDestroyMessage = new()
             {
                 netId = identity.netId,
