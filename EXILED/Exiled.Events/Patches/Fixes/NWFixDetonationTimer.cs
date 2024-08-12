@@ -15,6 +15,7 @@ namespace Exiled.Events.Patches.Fixes
 
     /// <summary>
     /// Fixes the issue where the game was not selecting the scenario with the nearest <see cref="AlphaWarheadController.DetonationScenario.TimeToDetonate"/> value.
+    /// <a href="https://git.scpslgame.com/northwood-qa/scpsl-bug-reporting/-/issues/396">Bug Report</a>
     /// </summary>
     [HarmonyPatch(typeof(AlphaWarheadController), nameof(AlphaWarheadController.Start))]
     internal class NWFixDetonationTimer
