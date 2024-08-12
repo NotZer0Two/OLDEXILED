@@ -342,12 +342,13 @@ namespace Exiled.API.Extensions
             }
         }
 
+
         /// <summary>
-        /// Scale the object for a player.
+        /// Scales an object for the specified player.
         /// </summary>
         /// <param name="player">Target to send.</param>
         /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to scale.</param>
-        /// <param name="scale">The scale the object needs to be.</param>
+        /// <param name="scale">The scale the object needs to be set to.</param>
         public static void ScaleNetworkIdentityObject(this Player player, NetworkIdentity identity, Vector3 scale)
         {
             identity.gameObject.transform.localScale = scale;
@@ -361,10 +362,10 @@ namespace Exiled.API.Extensions
         }
 
         /// <summary>
-        /// Scales the object for all the players.
+        /// Scales an object for all players.
         /// </summary>
         /// <param name="identity">The <see cref="Mirror.NetworkIdentity"/> to scale.</param>
-        /// <param name="scale">The scale the object needs to be.</param>
+        /// <param name="scale">The scale the object needs to be set to.</param>
         public static void ScaleNetworkIdentityObject(this NetworkIdentity identity, Vector3 scale)
         {
             identity.gameObject.transform.localScale = scale;
