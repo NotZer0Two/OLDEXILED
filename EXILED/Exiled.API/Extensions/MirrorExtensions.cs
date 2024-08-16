@@ -385,6 +385,7 @@ namespace Exiled.API.Extensions
             NetworkServer.SendToAll(message);
         }
 
+        /// <summary>
         /// Scales an object for the specified player.
         /// </summary>
         /// <param name="player">Target to send.</param>
