@@ -46,7 +46,7 @@ namespace Exiled.Events.EventArgs.Player
         public byte Type { get; }
 
         /// <summary>
-        /// Gets the player who's filpping the switch to the generator.
+        /// Gets the player who started the AudioLog.
         /// </summary>
         public Player Player { get; }
     }

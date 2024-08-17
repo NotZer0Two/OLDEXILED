@@ -19,8 +19,8 @@ namespace Exiled.Events.Patches.Events.Player
     using static HarmonyLib.AccessTools;
 
     /// <summary>
-    /// Patch the <see cref="PlayerInteract.UserCode_CmdSwitchAWButton" />.
-    /// Adds the <see cref="Handlers.Player.ActivatingWarheadPanel" /> event.
+    /// Patch the <see cref="AudioLog.ServerInteract" />.
+    /// Adds the <see cref="Handlers.Player.PlayingAudioLog" /> event.
     /// </summary>
     [EventPatch(typeof(Handlers.Player), nameof(Handlers.Player.PlayingAudioLog))]
     [HarmonyPatch(typeof(AudioLog), nameof(AudioLog.ServerInteract))]
