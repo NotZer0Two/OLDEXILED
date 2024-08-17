@@ -41,11 +41,6 @@ namespace Exiled.Events.EventArgs.Player
         public bool IsAllowed { get; set; }
 
         /// <summary>
-        /// Gets a value indicating the type of AudioLog.
-        /// </summary>
-        public byte Type { get; }
-
-        /// <summary>
         /// Gets the player who started the AudioLog.
         /// </summary>
         public Player Player { get; }
