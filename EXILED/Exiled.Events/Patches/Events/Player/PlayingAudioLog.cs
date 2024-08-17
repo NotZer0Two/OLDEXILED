@@ -41,9 +41,6 @@ namespace Exiled.Events.Patches.Events.Player
                     new(OpCodes.Ldarg_1),
                     new(OpCodes.Call, Method(typeof(Player), nameof(Player.Get), new[] { typeof(ReferenceHub) })),
 
-                    // collidreId
-                    new(OpCodes.Ldarg_2),
-
                     // true
                     new(OpCodes.Ldc_I4_1),
 
