@@ -44,7 +44,7 @@ namespace Exiled.Events.Patches.Events.Player
                     // true
                     new(OpCodes.Ldc_I4_1),
 
-                    // PlayingAudioLogEventArgs ev = new(Player, byte, bool)
+                    // PlayingAudioLogEventArgs ev = new(Player, bool)
                     new(OpCodes.Newobj, GetDeclaredConstructors(typeof(PlayingAudioLogEventArgs))[0]),
                     new(OpCodes.Dup),
 
