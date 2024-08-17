@@ -28,7 +28,6 @@ namespace Exiled.Events.EventArgs.Player
         public PlayingAudioLogEventArgs(Player player, bool isAllowed = true)
         {
             Player = player;
-            Type = colliderId;
             IsAllowed = isAllowed;
         }
 
