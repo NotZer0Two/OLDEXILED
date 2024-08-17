@@ -28,7 +28,7 @@ namespace Exiled.Events.EventArgs.Player
         /// <param name="isAllowed">
         /// <inheritdoc cref="IsAllowed" />
         /// </param>
-        public PlayingAudioLogEventArgs(Player player, byte colliderId, bool isAllowed = true)
+        public PlayingAudioLogEventArgs(Player player, bool isAllowed = true)
         {
             Player = player;
             Type = colliderId;
