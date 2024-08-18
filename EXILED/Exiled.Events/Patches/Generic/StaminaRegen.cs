@@ -13,7 +13,6 @@ namespace Exiled.Events.Patches.Generic
     using Exiled.API.Features.Roles;
     using HarmonyLib;
     using InventorySystem;
-    using InventorySystem.Items.Armor;
 
     /// <summary>
     /// Patches <see cref="Inventory.StaminaRegenMultiplier"/>.
