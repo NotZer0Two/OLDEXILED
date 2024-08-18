@@ -410,6 +410,7 @@ namespace Exiled.API.Extensions
                 SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, ply.Connection });
             }
         }
+
         /// <summary>
         /// Scales an object for all players.
         /// </summary>
