@@ -111,6 +111,11 @@ namespace Exiled.API.Features.Items
         }
 
         /// <summary>
+        /// Gets or sets the stamina regen multiplier.
+        /// </summary>
+        public float StaminaRegenMultiplier { get; set; } = 1f;
+
+        /// <summary>
         /// Gets or sets how much the users movement speed should be affected when wearing this armor. (higher values = slower movement).
         /// </summary>
         public float MovementSpeedMultiplier
