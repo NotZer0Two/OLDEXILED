@@ -157,7 +157,7 @@ namespace Exiled.API.Features.Items
             StaminaUseMultiplier = StaminaUseMultiplier,
             RemoveExcessOnDrop = RemoveExcessOnDrop,
             CategoryLimits = CategoryLimits,
-            StaminaRegenMultiplier = StaminaRegenMultiplier;
+            StaminaRegenMultiplier = StaminaRegenMultiplier,
             AmmoLimits = AmmoLimits,
             VestEfficacy = VestEfficacy,
             HelmetEfficacy = HelmetEfficacy,
