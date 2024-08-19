@@ -8,6 +8,7 @@
 namespace Exiled.Events.Patches.Generic
 {
     using Exiled.API.Features;
+    using Exiled.API.Features.Items;
 #pragma warning disable SA1313
 
     using HarmonyLib;
@@ -22,8 +23,8 @@ namespace Exiled.Events.Patches.Generic
     {
         private static void Postfix(BodyArmor __instance, ref float __result)
         {
-            if(Player.TryGet(__instance.OwnerInventory._hub, out Player player) && player.CurrentArmor != null)
-                __result *= player.CurrentArmor.StaminaRegenMultiplier;
+            if(Item.Get(__instance) is Armor armor)
+                __result *= armor.StaminaRegenMultiplier;
         }
     }
 }
