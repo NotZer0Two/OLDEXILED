@@ -15,7 +15,6 @@ namespace Exiled.API.Features.Items
     using Exiled.API.Interfaces;
 
     using InventorySystem.Items.Armor;
-
     using PlayerRoles;
 
     using Structs;
@@ -158,6 +157,7 @@ namespace Exiled.API.Features.Items
             StaminaUseMultiplier = StaminaUseMultiplier,
             RemoveExcessOnDrop = RemoveExcessOnDrop,
             CategoryLimits = CategoryLimits,
+            StaminaRegenMultiplier = StaminaRegenMultiplier;
             AmmoLimits = AmmoLimits,
             VestEfficacy = VestEfficacy,
             HelmetEfficacy = HelmetEfficacy,
@@ -173,6 +173,7 @@ namespace Exiled.API.Features.Items
                 VestEfficacy = armorPickup.VestEfficacy;
                 RemoveExcessOnDrop = armorPickup.RemoveExcessOnDrop;
                 StaminaUseMultiplier = armorPickup.StaminaUseMultiplier;
+                StaminaRegenMultiplier = armorPickup.StaminaRegenMultiplier;
                 AmmoLimits = armorPickup.AmmoLimits;
                 CategoryLimits = armorPickup.CategoryLimits;
             }
