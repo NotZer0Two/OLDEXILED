@@ -373,7 +373,7 @@ namespace Exiled.API.Extensions
             player.Connection.Send(objectDestroyMessage, 0);
             SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, player.Connection });
         }
-    
+
         /// <summary>
         /// Sends to the player a Fake Change Scene.
         /// </summary>
