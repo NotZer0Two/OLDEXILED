@@ -15,6 +15,7 @@ namespace Exiled.API.Extensions
     using System.Reflection.Emit;
     using System.Text;
 
+    using Exiled.API.Enums;
     using Features;
     using Features.Pools;
 
@@ -371,6 +372,35 @@ namespace Exiled.API.Extensions
 
             player.Connection.Send(objectDestroyMessage, 0);
             SendSpawnMessageMethodInfo?.Invoke(null, new object[] { identity, player.Connection });
+        }
+    
+        /// <summary>
+        /// Sends to the player a Fake Change Scene.
+        /// </summary>
+        /// <param name="player">The player to send the Scene.</param>
+        /// <param name="newSceneName">The new Scene the client will load.</param>
+        public static void SendFakeSceneLoading(this Player player, ScenesType newSceneName)
+        {
+            SceneMessage message = new()
+            {
+                sceneName = newSceneName.ToString(),
+            };
+
+            player.Connection.Send(message);
+        }
+
+        /// <summary>
+        /// Emulation of the method SCP:SL uses to change scene.
+        /// </summary>
+        /// <param name="scene">The new Scene the client will load.</param>
+        public static void ChangeSceneToAllClients(ScenesType scene)
+        {
+            SceneMessage message = new()
+            {
+                sceneName = scene.ToString(),
+            };
+
+            NetworkServer.SendToAll(message);
         }
 
         /// <summary>
