@@ -11,7 +11,8 @@ namespace Exiled.API.Features
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
+    using System.Reflection;
+    using CentralAuth;
     using CommandSystem;
 
     using Exiled.API.Enums;
@@ -134,11 +135,13 @@ namespace Exiled.API.Features
         public static Npc Spawn(string name, RoleTypeId role, int id = 0, string userId = "", Vector3? position = null)
         {
             GameObject newObject = Object.Instantiate(NetworkManager.singleton.playerPrefab);
+
             Npc npc = new(newObject)
             {
-                IsVerified = true,
+                IsVerified = userId != PlayerAuthenticationManager.DedicatedId && userId != null,
                 IsNPC = true,
             };
+
             try
             {
                 npc.ReferenceHub.roleManager.InitializeNewRole(RoleTypeId.None, RoleChangeReason.None);
@@ -148,20 +151,33 @@ namespace Exiled.API.Features
                 Log.Debug($"Ignore: {e}");
             }
 
-            if (RecyclablePlayerId.FreeIds.Contains(id))
+            if (!RecyclablePlayerId.FreeIds.Contains(id) && RecyclablePlayerId._autoIncrement >= id)
             {
-                RecyclablePlayerId.FreeIds.RemoveFromQueue(id);
-            }
-            else if (RecyclablePlayerId._autoIncrement >= id)
-            {
-                RecyclablePlayerId._autoIncrement = id = RecyclablePlayerId._autoIncrement + 1;
+                Log.Warn($"{Assembly.GetCallingAssembly().GetName().Name} tried to spawn an NPC with a duplicate PlayerID. Using auto-incremented ID instead to avoid issues.");
+                id = new RecyclablePlayerId(false).Value;
             }
 
             FakeConnection fakeConnection = new(id);
             NetworkServer.AddPlayerForConnection(fakeConnection, newObject);
+
             try
             {
-                npc.ReferenceHub.authManager.UserId = string.IsNullOrEmpty(userId) ? $"Dummy@localhost" : userId;
+                if (userId == PlayerAuthenticationManager.DedicatedId)
+                {
+                    npc.ReferenceHub.authManager.SyncedUserId = userId;
+                    try
+                    {
+                        npc.ReferenceHub.authManager.InstanceMode = ClientInstanceMode.DedicatedServer;
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Debug($"Ignore: {e}");
+                    }
+                }
+                else
+                {
+                    npc.ReferenceHub.authManager.UserId = userId == string.Empty ? $"Dummy@localhost" : userId;
+                }
             }
             catch (Exception e)
             {
@@ -171,15 +187,14 @@ namespace Exiled.API.Features
             npc.ReferenceHub.nicknameSync.Network_myNickSync = name;
             Dictionary.Add(newObject, npc);
 
-            Timing.CallDelayed(
-                0.3f,
-                () =>
-                {
-                    npc.Role.Set(role, SpawnReason.RoundStart, position is null ? RoleSpawnFlags.All : RoleSpawnFlags.AssignInventory);
-                });
+            Timing.CallDelayed(0.5f, () =>
+            {
+                npc.Role.Set(role, SpawnReason.RoundStart, position is null ? RoleSpawnFlags.All : RoleSpawnFlags.AssignInventory);
+            });
 
             if (position is not null)
                 Timing.CallDelayed(0.5f, () => npc.Position = position.Value);
+
             return npc;
         }
 
