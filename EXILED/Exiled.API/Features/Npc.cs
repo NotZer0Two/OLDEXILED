@@ -133,33 +133,20 @@ namespace Exiled.API.Features
         /// <param name="userId">The userID of the NPC.</param>
         /// <param name="position">The position to spawn the NPC.</param>
         /// <returns>The <see cref="Npc"/> spawned.</returns>
-        public static Npc Spawn(string name, RoleTypeId role, int id = 0, string userId = "", Vector3? position = null)
+        public static Npc Spawn(string name, RoleTypeId role, int id = 0, string userId = PlayerAuthenticationManager.DedicatedId, Vector3? position = null)
         {
-            GameObject newObject = Object.Instantiate(NetworkManager.singleton.playerPrefab);
+            GameObject newObject = UnityEngine.Object.Instantiate(Mirror.NetworkManager.singleton.playerPrefab);
 
             Npc npc = new(newObject)
             {
-                IsVerified = userId != PlayerAuthenticationManager.DedicatedId && userId != null,
                 IsNPC = true,
             };
-
-            try
-            {
-                npc.ReferenceHub.roleManager.InitializeNewRole(RoleTypeId.None, RoleChangeReason.None);
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"Ignore: {e}");
-            }
 
             if (!RecyclablePlayerId.FreeIds.Contains(id) && RecyclablePlayerId._autoIncrement >= id)
             {
                 Log.Warn($"{Assembly.GetCallingAssembly().GetName().Name} tried to spawn an NPC with a duplicate PlayerID. Using auto-incremented ID instead to avoid issues.");
-                id = new RecyclablePlayerId(false).Value;
+                id = new RecyclablePlayerId(true).Value;
             }
-
-            FakeConnection fakeConnection = new(id);
-            NetworkServer.AddPlayerForConnection(fakeConnection, newObject);
 
             try
             {
@@ -172,7 +159,7 @@ namespace Exiled.API.Features
                     }
                     catch (Exception e)
                     {
-                        Log.Debug($"Ignore: {e}");
+                        Log.Debug($"Ignore: {e.Message}");
                     }
                 }
                 else
@@ -182,8 +169,20 @@ namespace Exiled.API.Features
             }
             catch (Exception e)
             {
-                Log.Debug($"Ignore: {e}");
+                Log.Debug($"Ignore: {e.Message}");
             }
+
+            try
+            {
+                npc.ReferenceHub.roleManager.InitializeNewRole(RoleTypeId.None, RoleChangeReason.None);
+            }
+            catch (Exception e)
+            {
+                Log.Debug($"Ignore: {e.Message}");
+            }
+
+            FakeConnection fakeConnection = new(id);
+            NetworkServer.AddPlayerForConnection(fakeConnection, newObject);
 
             npc.ReferenceHub.nicknameSync.Network_myNickSync = name;
             Dictionary.Add(newObject, npc);
