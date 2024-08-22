@@ -145,7 +145,7 @@ namespace Exiled.API.Features
             if (!RecyclablePlayerId.FreeIds.Contains(id) && RecyclablePlayerId._autoIncrement >= id)
             {
                 Log.Warn($"{Assembly.GetCallingAssembly().GetName().Name} tried to spawn an NPC with a duplicate PlayerID. Using auto-incremented ID instead to avoid an ID clash.");
-                id = new RecyclablePlayerId(false).Value;
+                id = new RecyclablePlayerId(true).Value;
             }
 
             try
