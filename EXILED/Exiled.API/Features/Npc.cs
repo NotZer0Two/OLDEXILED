@@ -164,7 +164,8 @@ namespace Exiled.API.Features
                 }
                 else
                 {
-                    npc.ReferenceHub.authManager.UserId = userId == string.Empty ? $"Dummy@localhost" : userId;
+                    npc.ReferenceHub.authManager.InstanceMode = ClientInstanceMode.Unverified;
+                    npc.ReferenceHub.authManager._privUserId = userId == string.Empty ? $"Dummy@localhost" : userId;
                 }
             }
             catch (Exception e)
