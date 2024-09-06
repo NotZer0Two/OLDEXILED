@@ -193,7 +193,7 @@ namespace Exiled.API.Features
                 npc.Role.Set(role, SpawnReason.RoundStart, position is null ? RoleSpawnFlags.All : RoleSpawnFlags.AssignInventory);
 
                 if (position is not null)
-                    npc.Position = position.Value
+                    npc.Position = position.Value;
             });
 
             return npc;
