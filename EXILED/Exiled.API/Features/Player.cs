@@ -80,6 +80,16 @@ namespace Exiled.API.Features
         /// A list of the player's items.
         /// </summary>
         internal readonly List<Item> ItemsValue = new(8);
+
+        /// <summary>
+        /// A dictionary of custom item category limits.
+        /// </summary>
+        internal Dictionary<ItemCategory, sbyte> CustomCategoryLimits = new();
+
+        /// <summary>
+        /// A dictionary of custom ammo limits.
+        /// </summary>
+        internal Dictionary<AmmoType, ushort> CustomAmmoLimits = new();
 #pragma warning restore SA1401
 
         private readonly HashSet<EActor> componentsInChildren = new();
@@ -204,12 +214,13 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets the <see cref="ReferenceHub"/>'s <see cref="VoiceModule"/>, can be null.
         /// </summary>
-        public VoiceModuleBase VoiceModule => RoleManager.CurrentRole is IVoiceRole voiceRole ? voiceRole.VoiceModule : null;
+        [Obsolete("Use IVoiceRole::VoiceModule instead.")]
+        public VoiceModuleBase VoiceModule => Role is Roles.IVoiceRole voiceRole ? voiceRole.VoiceModule : null;
 
         /// <summary>
         /// Gets the <see cref="ReferenceHub"/>'s <see cref="PersonalRadioPlayback"/>, can be null.
         /// </summary>
-        public PersonalRadioPlayback RadioPlayback => VoiceModule is IRadioVoiceModule radioVoiceModule ? radioVoiceModule.RadioPlayback : null;
+        public PersonalRadioPlayback RadioPlayback => Role is Roles.IVoiceRole voiceRole ? voiceRole.VoiceModule is IRadioVoiceModule radioVoiceModule ? radioVoiceModule.RadioPlayback : null : null;
 
         /// <summary>
         /// Gets the <see cref="Hints.HintDisplay"/> of the player.
@@ -282,6 +293,7 @@ namespace Exiled.API.Features
                     "northwood" => AuthenticationType.Northwood,
                     "localhost" => AuthenticationType.LocalHost,
                     "ID_Dedicated" => AuthenticationType.DedicatedServer,
+                    "offline" => AuthenticationType.Offline,
                     _ => AuthenticationType.Unknown,
                 };
             }
@@ -503,7 +515,7 @@ namespace Exiled.API.Features
         /// </summary>
         /// <seealso cref="Teleport(Vector3)"/>
         /// <seealso cref="Teleport(object)"/>
-        public Vector3 Position
+        public virtual Vector3 Position
         {
             get => Transform.position;
             set => ReferenceHub.TryOverridePosition(value, Vector3.zero);
@@ -782,7 +794,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a value indicating whether or not the player is speaking.
         /// </summary>
-        public bool IsSpeaking => VoiceModule != null && VoiceModule.IsSpeaking;
+        public bool IsSpeaking => Role is Roles.IVoiceRole voiceRole && voiceRole.VoiceModule.IsSpeaking;
 
         /// <summary>
         /// Gets the player's voice color.
@@ -794,13 +806,13 @@ namespace Exiled.API.Features
         /// </summary>
         public VoiceChatChannel VoiceChannel
         {
-            get => VoiceModule == null ? VoiceChatChannel.None : VoiceModule.CurrentChannel;
+            get => Role is Roles.IVoiceRole voiceRole ? voiceRole.VoiceModule.CurrentChannel : VoiceChatChannel.None;
             set
             {
-                if (VoiceModule == null)
+                if (Role is not Roles.IVoiceRole voiceRole)
                     return;
 
-                VoiceModule.CurrentChannel = value;
+                voiceRole.VoiceModule.CurrentChannel = value;
             }
         }
 
@@ -958,7 +970,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets the armor that the player is currently wearing. Value will be <see langword="null"/> if the player is not wearing any armor.
         /// </summary>
-        public Armor CurrentArmor => Inventory.TryGetBodyArmor(out BodyArmor armor) ? (Armor)Item.Get(armor) : null;
+        public Armor CurrentArmor => Inventory.TryGetBodyArmor(out BodyArmor armor) ? Item.Get<Armor>(armor) : null;
 
         /// <summary>
         /// Gets the <see cref="StaminaStat"/> class.
@@ -1266,8 +1278,13 @@ namespace Exiled.API.Features
             if (Dictionary.TryGetValue(gameObject, out Player player))
                 return player;
 
-            UnverifiedPlayers.TryGetValue(gameObject, out player);
-            return player;
+            if (UnverifiedPlayers.TryGetValue(gameObject, out player))
+                return player;
+
+            if (ReferenceHub.TryGetHub(gameObject, out ReferenceHub hub))
+                return new(hub);
+
+            return null;
         }
 
         /// <summary>
@@ -1295,7 +1312,7 @@ namespace Exiled.API.Features
                 if (int.TryParse(args, out int id))
                     return Get(id);
 
-                if (args.EndsWith("@steam") || args.EndsWith("@discord") || args.EndsWith("@northwood"))
+                if (args.EndsWith("@steam") || args.EndsWith("@discord") || args.EndsWith("@northwood") || args.EndsWith("@offline"))
                 {
                     foreach (Player player in Dictionary.Values)
                     {
@@ -1984,8 +2001,8 @@ namespace Exiled.API.Features
                 if (item.Serial == Inventory.CurItem.SerialNumber)
                     Inventory.NetworkCurItem = ItemIdentifier.None;
 
+                ItemsValue.Remove(item);
                 Inventory.UserInventory.Items.Remove(item.Serial);
-                typeof(InventoryExtensions).InvokeStaticEvent(nameof(InventoryExtensions.OnItemRemoved), new object[] { ReferenceHub, item.Base, null });
 
                 Inventory.SendItemsNextFrame = true;
             }
@@ -2277,7 +2294,7 @@ namespace Exiled.API.Features
         /// <returns><see langword="true"/> if message was send; otherwise, <see langword="false"/>.</returns>
         public bool SendStaffMessage(string message, EncryptedChannelManager.EncryptedChannel channel = EncryptedChannelManager.EncryptedChannel.AdminChat)
         {
-            return ReferenceHub.encryptedChannelManager.TrySendMessageToClient("!" + NetId + message, channel);
+            return ReferenceHub.encryptedChannelManager.TrySendMessageToClient(NetId + "!" + message, channel);
         }
 
         /// <summary>
@@ -2288,7 +2305,7 @@ namespace Exiled.API.Features
         /// <returns><see langword="true"/> if message was send; otherwise, <see langword="false"/>.</returns>
         public bool SendStaffPing(string message, EncryptedChannelManager.EncryptedChannel channel = EncryptedChannelManager.EncryptedChannel.AdminChat)
         {
-            return ReferenceHub.encryptedChannelManager.TrySendMessageToClient("!0" + message, channel);
+            return ReferenceHub.encryptedChannelManager.TrySendMessageToClient("0!" + message, channel);
         }
 
         /// <summary>
@@ -2320,6 +2337,26 @@ namespace Exiled.API.Features
             Inventory.ServerAddAmmo(ammoType.GetItemType(), amount);
 
         /// <summary>
+        /// Adds the amount of a specified ammo to player's inventory.
+        /// </summary>
+        /// <param name="ammo">A dictionary of ItemType and ushort of ammo and amount.</param>
+        public void AddAmmo(Dictionary<ItemType, ushort> ammo)
+        {
+            foreach (KeyValuePair<ItemType, ushort> kvp in ammo)
+                AddAmmo(kvp.Key.GetAmmoType(), kvp.Value);
+        }
+
+        /// <summary>
+        /// Adds the amount of a specified <see cref="AmmoType">ammo type</see> to player's inventory.
+        /// </summary>
+        /// <param name="ammoBag">A dictionary of <see cref="AmmoType">ammo types</see> that will be added.</param>
+        public void AddAmmo(Dictionary<AmmoType, ushort> ammoBag)
+        {
+            foreach (KeyValuePair<AmmoType, ushort> kvp in ammoBag)
+                AddAmmo(kvp.Key, kvp.Value);
+        }
+
+        /// <summary>
         /// Adds the amount of a weapon's <see cref="AmmoType">ammo type</see> to the player's inventory.
         /// </summary>
         /// <param name="weaponType">The <see cref="ItemType"/> of the weapon.</param>
@@ -2336,6 +2373,16 @@ namespace Exiled.API.Features
             ItemType itemType = ammoType.GetItemType();
             if (itemType is not ItemType.None)
                 Inventory.ServerSetAmmo(itemType, amount);
+        }
+
+        /// <summary>
+        /// Sets the amount of a specified <see cref="AmmoType">ammo type</see> to player's inventory.
+        /// </summary>
+        /// <param name="ammoBag">A dictionary of <see cref="AmmoType">ammo types</see> that will be added.</param>
+        public void SetAmmo(Dictionary<AmmoType, ushort> ammoBag)
+        {
+            foreach (KeyValuePair<AmmoType, ushort> kvp in ammoBag)
+                SetAmmo(kvp.Key, kvp.Value);
         }
 
         /// <summary>
@@ -2357,21 +2404,207 @@ namespace Exiled.API.Features
 
         /// <summary>
         /// Gets the maximum amount of ammo the player can hold, given the ammo <see cref="AmmoType"/>.
-        /// This method factors in the armor the player is wearing, as well as server configuration.
-        /// For the maximum amount of ammo that can be given regardless of worn armor and server configuration, see <see cref="ServerConfigSynchronizer.AmmoLimit"/>.
         /// </summary>
         /// <param name="type">The <see cref="AmmoType"/> of the ammo to check.</param>
-        /// <returns>The maximum amount of ammo this player can carry. Guaranteed to be between <c>0</c> and <see cref="ServerConfigSynchronizer.AmmoLimit"/>.</returns>
-        public int GetAmmoLimit(AmmoType type) =>
-            InventorySystem.Configs.InventoryLimits.GetAmmoLimit(type.GetItemType(), referenceHub);
+        /// <param name="ignoreArmor">If the method should ignore the armor the player is wearing.</param>
+        /// <returns>The maximum amount of ammo this player can carry.</returns>
+        public ushort GetAmmoLimit(AmmoType type, bool ignoreArmor = false)
+        {
+            if (ignoreArmor)
+            {
+                if (CustomAmmoLimits.TryGetValue(type, out ushort limit))
+                    return limit;
+
+                ItemType itemType = type.GetItemType();
+                return ServerConfigSynchronizer.Singleton.AmmoLimitsSync.FirstOrDefault(x => x.AmmoType == itemType).Limit;
+            }
+
+            return InventorySystem.Configs.InventoryLimits.GetAmmoLimit(type.GetItemType(), referenceHub);
+        }
+
+        /// <summary>
+        /// Gets the maximum amount of ammo the player can hold, given the ammo <see cref="AmmoType"/>.
+        /// </summary>
+        /// <param name="type">The <see cref="AmmoType"/> of the ammo to check.</param>
+        /// <returns>The maximum amount of ammo this player can carry.</returns>
+        [Obsolete("Use Player::GetAmmoLimit(AmmoType, bool) instead.")]
+        public int GetAmmoLimit(AmmoType type)
+        {
+            return (int)InventorySystem.Configs.InventoryLimits.GetAmmoLimit(type.GetItemType(), referenceHub);
+        }
+
+        /// <summary>
+        /// Gets the maximum amount of ammo the player can hold, given the ammo <see cref="AmmoType"/>.
+        /// This limit will scale with the armor the player is wearing.
+        /// For armor ammo limits, see <see cref="Armor.AmmoLimits"/>.
+        /// </summary>
+        /// <param name="ammoType">The <see cref="AmmoType"/> of the ammo to check.</param>
+        /// <param name="limit">The <see cref="ushort"/> number that will define the new limit.</param>
+        public void SetAmmoLimit(AmmoType ammoType, ushort limit)
+        {
+            CustomAmmoLimits[ammoType] = limit;
+
+            ItemType itemType = ammoType.GetItemType();
+            int index = ServerConfigSynchronizer.Singleton.AmmoLimitsSync.FindIndex(x => x.AmmoType == itemType);
+            MirrorExtensions.SendFakeSyncObject(this, ServerConfigSynchronizer.Singleton.netIdentity, typeof(ServerConfigSynchronizer), writer =>
+            {
+                writer.WriteULong(2ul);
+                writer.WriteUInt(1);
+                writer.WriteByte((byte)SyncList<ServerConfigSynchronizer.AmmoLimit>.Operation.OP_SET);
+                writer.WriteInt(index);
+                writer.WriteAmmoLimit(new() { Limit = limit, AmmoType = itemType, });
+            });
+        }
+
+        /// <summary>
+        /// Reset a custom <see cref="AmmoType"/> limit.
+        /// </summary>
+        /// <param name="ammoType">The <see cref="AmmoType"/> of the ammo to reset.</param>
+        public void ResetAmmoLimit(AmmoType ammoType)
+        {
+            if (!HasCustomAmmoLimit(ammoType))
+            {
+                Log.Error($"{nameof(Player)}.{nameof(ResetAmmoLimit)}(AmmoType): AmmoType.{ammoType} does not have a custom limit.");
+                return;
+            }
+
+            CustomAmmoLimits.Remove(ammoType);
+
+            ItemType itemType = ammoType.GetItemType();
+            int index = ServerConfigSynchronizer.Singleton.AmmoLimitsSync.FindIndex(x => x.AmmoType == itemType);
+            MirrorExtensions.SendFakeSyncObject(this, ServerConfigSynchronizer.Singleton.netIdentity, typeof(ServerConfigSynchronizer), writer =>
+            {
+                writer.WriteULong(2ul);
+                writer.WriteUInt(1);
+                writer.WriteByte((byte)SyncList<ServerConfigSynchronizer.AmmoLimit>.Operation.OP_SET);
+                writer.WriteInt(index);
+                writer.WriteAmmoLimit(ServerConfigSynchronizer.Singleton.AmmoLimitsSync[index]);
+            });
+        }
+
+        /// <summary>
+        /// Check if the player has a custom limit for a specific <see cref="AmmoType"/>.
+        /// </summary>
+        /// <param name="ammoType">The <see cref="AmmoType"/> to check.</param>
+        /// <returns>If the player has a custom limit for the specific <see cref="AmmoType"/>.</returns>
+        public bool HasCustomAmmoLimit(AmmoType ammoType) => CustomAmmoLimits.ContainsKey(ammoType);
 
         /// <summary>
         /// Gets the maximum amount of an <see cref="ItemCategory"/> the player can hold, based on the armor the player is wearing, as well as server configuration.
         /// </summary>
         /// <param name="category">The <see cref="ItemCategory"/> to check.</param>
         /// <returns>The maximum amount of items in the category that the player can hold.</returns>
+        [Obsolete("Use Player::GetCategoryLimit(ItemCategory, bool) instead.")]
         public int GetCategoryLimit(ItemCategory category) =>
             InventorySystem.Configs.InventoryLimits.GetCategoryLimit(category, referenceHub);
+
+        /// <summary>
+        /// Gets the maximum amount of an <see cref="ItemCategory"/> the player can hold, based on the armor the player is wearing, as well as server configuration.
+        /// </summary>
+        /// <param name="category">The <see cref="ItemCategory"/> to check.</param>
+        /// <param name="ignoreArmor">If the method should ignore the armor the player is wearing.</param>
+        /// <returns>The maximum amount of items in the category that the player can hold.</returns>
+        public sbyte GetCategoryLimit(ItemCategory category, bool ignoreArmor = false)
+        {
+            int index = InventorySystem.Configs.InventoryLimits.StandardCategoryLimits.Where(x => x.Value >= 0).OrderBy(x => x.Key).ToList().FindIndex(x => x.Key == category);
+
+            if (ignoreArmor && index != -1)
+            {
+                if (CustomCategoryLimits.TryGetValue(category, out sbyte customLimit))
+                    return customLimit;
+
+                return ServerConfigSynchronizer.Singleton.CategoryLimits[index];
+            }
+
+            sbyte limit = InventorySystem.Configs.InventoryLimits.GetCategoryLimit(category, referenceHub);
+
+            return limit == -1 ? (sbyte)1 : limit;
+        }
+
+        /// <summary>
+        /// Set the maximum amount of an <see cref="ItemCategory"/> the player can hold. Only works with <see cref="ItemCategory.Keycard"/>, <see cref="ItemCategory.Medical"/>, <see cref="ItemCategory.Firearm"/>, <see cref="ItemCategory.Grenade"/> and <see cref="ItemCategory.SCPItem"/>.
+        /// This limit will scale with the armor the player is wearing.
+        /// For armor category limits, see <see cref="Armor.CategoryLimits"/>.
+        /// </summary>
+        /// <param name="category">The <see cref="ItemCategory"/> to check.</param>
+        /// <param name="limit">The <see cref="int"/> number that will define the new limit.</param>
+        public void SetCategoryLimit(ItemCategory category, sbyte limit)
+        {
+            int index = InventorySystem.Configs.InventoryLimits.StandardCategoryLimits.Where(x => x.Value >= 0).OrderBy(x => x.Key).ToList().FindIndex(x => x.Key == category);
+
+            if (index == -1)
+            {
+                Log.Error($"{nameof(Player)}.{nameof(SetCategoryLimit)}(ItemCategory, sbyte): Cannot set category limit for ItemCategory.{category}.");
+                return;
+            }
+
+            CustomCategoryLimits[category] = limit;
+
+            MirrorExtensions.SendFakeSyncObject(this, ServerConfigSynchronizer.Singleton.netIdentity, typeof(ServerConfigSynchronizer), writer =>
+            {
+                writer.WriteULong(1ul);
+                writer.WriteUInt(1);
+                writer.WriteByte((byte)SyncList<sbyte>.Operation.OP_SET);
+                writer.WriteInt(index);
+                writer.WriteSByte(limit);
+            });
+        }
+
+        /// <summary>
+        /// Reset a custom <see cref="ItemCategory"/> limit. Only works with <see cref="ItemCategory.Keycard"/>, <see cref="ItemCategory.Medical"/>, <see cref="ItemCategory.Firearm"/>, <see cref="ItemCategory.Grenade"/> and <see cref="ItemCategory.SCPItem"/>.
+        /// </summary>
+        /// <param name="category">The <see cref="ItemCategory"/> of the category to reset.</param>
+        public void ResetCategoryLimit(ItemCategory category)
+        {
+            int index = InventorySystem.Configs.InventoryLimits.StandardCategoryLimits.Where(x => x.Value >= 0).OrderBy(x => x.Key).ToList().FindIndex(x => x.Key == category);
+
+            if (index == -1)
+            {
+                Log.Error($"{nameof(Player)}.{nameof(ResetCategoryLimit)}(ItemCategory, sbyte): Cannot reset category limit for ItemCategory.{category}.");
+                return;
+            }
+
+            if (!HasCustomCategoryLimit(category))
+            {
+                Log.Error($"{nameof(Player)}.{nameof(ResetCategoryLimit)}(ItemCategory): ItemCategory.{category} does not have a custom limit.");
+                return;
+            }
+
+            CustomCategoryLimits.Remove(category);
+
+            MirrorExtensions.SendFakeSyncObject(this, ServerConfigSynchronizer.Singleton.netIdentity, typeof(ServerConfigSynchronizer), writer =>
+            {
+                writer.WriteULong(1ul);
+                writer.WriteUInt(1);
+                writer.WriteByte((byte)SyncList<sbyte>.Operation.OP_SET);
+                writer.WriteInt(index);
+                writer.WriteSByte(ServerConfigSynchronizer.Singleton.CategoryLimits[index]);
+            });
+        }
+
+        /// <summary>
+        /// Check if the player has a custom limit for a specific <see cref="ItemCategory"/>.
+        /// </summary>
+        /// <param name="category">The <see cref="ItemCategory"/> to check.</param>
+        /// <returns>If the player has a custom limit for the specific <see cref="ItemCategory"/>.</returns>
+        public bool HasCustomCategoryLimit(ItemCategory category) => CustomCategoryLimits.ContainsKey(category);
+
+        /// <summary>
+        /// Grants the player their current role's loadout.
+        /// </summary>
+        public void GrantLoadout() => GrantLoadout(Role.Type);
+
+        /// <summary>
+        /// Grants a player a role's loadout.
+        /// </summary>
+        /// <param name="roleType">The role loadout to give.</param>
+        public void GrantLoadout(RoleTypeId roleType)
+        {
+            InventoryRoleInfo info = roleType.GetInventory();
+
+            AddItem(info.Items);
+            AddAmmo(info.Ammo);
+        }
 
         /// <summary>
         /// Adds an item of the specified type with default durability(ammo/charge) and no mods to the player's inventory.
@@ -2582,7 +2815,7 @@ namespace Exiled.API.Features
         /// <returns>The <see cref="Item"/> that was added.</returns>
         public Item AddItem(FirearmPickup pickup, IEnumerable<AttachmentIdentifier> identifiers)
         {
-            Firearm firearm = (Firearm)Item.Get(Inventory.ServerAddItem(pickup.Type, pickup.Serial, pickup.Base));
+            Firearm firearm = Item.Get<Firearm>(Inventory.ServerAddItem(pickup.Type, pickup.Serial, pickup.Base));
 
             if (identifiers is not null)
                 firearm.AddAttachment(identifiers);
@@ -2728,8 +2961,8 @@ namespace Exiled.API.Features
         /// <seealso cref="DropItems()"/>
         public void ClearInventory(bool destroy = true)
         {
-            ClearItems(destroy);
             ClearAmmo();
+            ClearItems(destroy);
         }
 
         /// <summary>
@@ -2741,8 +2974,8 @@ namespace Exiled.API.Features
         /// <seealso cref="DropItems()"/>
         public void ClearItems(bool destroy = true)
         {
-            if (CurrentArmor is not null)
-                CurrentArmor.RemoveExcessOnDrop = true;
+            if (CurrentArmor is Armor armor)
+                armor.RemoveExcessOnDrop = false;
 
             while (Items.Count > 0)
                 RemoveItem(Items.ElementAt(0), destroy);
@@ -3101,6 +3334,14 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
+        /// Gets an effect of a player.
+        /// </summary>
+        /// <typeparam name="T">The <see cref="StatusEffectBase"/> to get.</typeparam>
+        /// <returns>The <see cref="StatusEffectBase"/> found.</returns>
+        public T GetEffect<T>()
+            where T : StatusEffectBase => ReferenceHub.playerEffectsController.GetEffect<T>();
+
+        /// <summary>
         /// Gets an instance of <see cref="StatusEffectBase"/> by <see cref="EffectType"/>.
         /// </summary>
         /// <param name="effectType">The <see cref="EffectType"/>.</param>
@@ -3221,7 +3462,7 @@ namespace Exiled.API.Features
         /// <param name="isActive">Whether or not the tantrum will apply the <see cref="EffectType.Stained"/> effect.</param>
         /// <remarks>If <paramref name="isActive"/> is <see langword="true"/>, the tantrum is moved slightly up from its original position. Otherwise, the collision will not be detected and the slowness will not work.</remarks>
         /// <returns>The <see cref="TantrumHazard"/> instance..</returns>
-        public TantrumHazard PlaceTantrum(bool isActive = true) => Map.PlaceTantrum(Position, isActive);
+        public TantrumHazard PlaceTantrum(bool isActive = true) => TantrumHazard.PlaceTantrum(Position, isActive);
 
         /// <summary>
         /// Gives a new <see cref="AhpStat">to the player</see>.
@@ -3367,11 +3608,11 @@ namespace Exiled.API.Features
                 nameof(Player) => Dictionary.Values.GetRandomValue(),
                 nameof(Pickup) => Pickup.BaseToPickup.GetRandomValue().Value,
                 nameof(Ragdoll) => Ragdoll.List.GetRandomValue(),
-                nameof(Locker) => Map.GetRandomLocker(),
+                nameof(Locker) => Lockers.Locker.Random().Base,
                 nameof(Generator) => Generator.List.GetRandomValue(),
                 nameof(Window) => Window.List.GetRandomValue(),
                 nameof(Scp914) => Scp914.Scp914Controller,
-                nameof(LockerChamber) => Map.GetRandomLocker().Chambers.GetRandomValue(),
+                nameof(LockerChamber) => Lockers.Locker.Random().Chambers.GetRandomValue().Base,
                 _ => null,
             };
 

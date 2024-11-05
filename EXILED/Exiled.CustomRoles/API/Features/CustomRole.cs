@@ -537,6 +537,16 @@ namespace Exiled.CustomRoles.API.Features
                         Log.Debug($"{Name}: Adding {itemName} to inventory.");
                         TryAddItem(player, itemName);
                     }
+
+                    if (Ammo.Count > 0)
+                    {
+                        Log.Debug($"{Name}: Adding Ammo to {player.Nickname} inventory.");
+                        foreach (AmmoType type in EnumUtils<AmmoType>.Values)
+                        {
+                            if (type != AmmoType.None)
+                                player.SetAmmo(type, Ammo.ContainsKey(type) ? Ammo[type] == ushort.MaxValue ? InventoryLimits.GetAmmoLimit(type.GetItemType(), player.ReferenceHub) : Ammo[type] : (ushort)0);
+                        }
+                    }
                 });
 
             Log.Debug($"{Name}: Setting health values.");
@@ -830,6 +840,16 @@ namespace Exiled.CustomRoles.API.Features
                 }
             }
 
+            if (SpawnProperties.RoomSpawnPoints.Count > 0)
+            {
+                foreach ((float chance, Vector3 pos) in SpawnProperties.RoomSpawnPoints)
+                {
+                    double r = Loader.Random.NextDouble() * 100;
+                    if (r <= chance)
+                        return pos;
+                }
+            }
+
             return Vector3.zero;
         }
 
@@ -859,7 +879,7 @@ namespace Exiled.CustomRoles.API.Features
             Exiled.Events.Handlers.Player.ChangingRole -= OnInternalChangingRole;
             Exiled.Events.Handlers.Player.Spawning -= OnInternalSpawning;
             Exiled.Events.Handlers.Player.SpawningRagdoll -= OnSpawningRagdoll;
-            Exiled.Events.Handlers.Player.Destroying += OnDestroying;
+            Exiled.Events.Handlers.Player.Destroying -= OnDestroying;
         }
 
         /// <summary>
@@ -909,25 +929,6 @@ namespace Exiled.CustomRoles.API.Features
             if (Check(ev.Player) && ((ev.NewRole == RoleTypeId.Spectator && !KeepRoleOnDeath) || (ev.NewRole != RoleTypeId.Spectator && ev.NewRole != Role && !KeepRoleOnChangingRole)))
             {
                 RemoveRole(ev.Player);
-            }
-            else if (Check(ev.Player))
-            {
-                Log.Debug($"{Name}: Checking ammo stuff {Ammo.Count}");
-                if (Ammo.Count > 0)
-                {
-                    Log.Debug($"{Name}: Clearing ammo");
-                    ev.Ammo.Clear();
-                    Timing.CallDelayed(
-                        0.5f,
-                        () =>
-                        {
-                            foreach (AmmoType type in Enum.GetValues(typeof(AmmoType)))
-                            {
-                                if (type != AmmoType.None)
-                                    ev.Player.SetAmmo(type, Ammo.ContainsKey(type) ? Ammo[type] == ushort.MaxValue ? InventoryLimits.GetAmmoLimit(type.GetItemType(), ev.Player.ReferenceHub) : Ammo[type] : (ushort)0);
-                            }
-                        });
-                }
             }
         }
 
