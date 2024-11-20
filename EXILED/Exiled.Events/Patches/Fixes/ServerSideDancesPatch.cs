@@ -45,11 +45,10 @@ namespace Exiled.Events.Patches.Fixes
             ListPool<CodeInstruction>.Pool.Return(newInstructions);
         }
 
-        [HarmonyPostfix]
         private static void Postfix(ref Scp3114Dance __instance, NetworkWriter writer)
         {
             Npc npc = Npc.Get(__instance.Owner);
-            if (npc != null && __instance.DanceVariant != 0)
+            if (npc != null && __instance.DanceVariant != byte.MaxValue)
             {
                 writer.WriteByte((byte)__instance.DanceVariant);
                 return;
