@@ -241,5 +241,26 @@ namespace Exiled.API.Features.Roles
         /// <param name="alreadySpawned">The List of Roles already spawned.</param>
         /// <returns>The Spawn Chance.</returns>
         public float GetSpawnChance(List<RoleTypeId> alreadySpawned) => Base is ISpawnableScp spawnableScp ? spawnableScp.GetSpawnChance(alreadySpawned) : 0;
+
+        /// <summary>
+        /// SCP-3114 starts dancing.
+        /// </summary>
+        /// <param name="danceType">The dance you want to do.</param>
+        public void StartDancing(DanceType danceType)
+        {
+            Dance.IsDancing = true;
+            Dance.DanceVariant = (int)danceType;
+            Dance._serverStartPos = new RelativePositioning.RelativePosition(Dance.CastRole.FpcModule.Position);
+            Dance.ServerSendRpc(true);
+        }
+
+        /// <summary>
+        /// Stops the SCP-3114 from Dancing.
+        /// </summary>
+        public void StopDancing()
+        {
+            Dance.IsDancing = false;
+            Dance.ServerSendRpc(true);
+        }
     }
 }
