@@ -42,8 +42,6 @@ namespace Exiled.Events.Patches.Fixes
             int offset = 4;
             int index = newInstructions.FindIndex(instruction => instruction.Calls(Method(typeof(SubroutineBase), nameof(SubroutineBase.ServerWriteRpc)))) + offset;
 
-            Log.Info(index);
-
             newInstructions.InsertRange(index, new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Br_S, skip),
