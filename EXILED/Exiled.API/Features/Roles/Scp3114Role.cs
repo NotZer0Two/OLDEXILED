@@ -217,7 +217,7 @@ namespace Exiled.API.Features.Roles
         /// <summary>
         /// Gets or sets the bound dance.
         /// </summary>
-        internal DanceType DanceType { get; set; }
+        internal DanceType DanceType { get; set; } = DanceType.None;
 
         /// <summary>
         /// Reset Scp3114 FakeIdentity.
@@ -249,7 +249,7 @@ namespace Exiled.API.Features.Roles
         public void StartDancing(DanceType danceType)
         {
             Dance.IsDancing = true;
-            Dance.DanceVariant = (int)danceType;
+            DanceType = danceType;
             Dance._serverStartPos = new RelativePositioning.RelativePosition(Dance.CastRole.FpcModule.Position);
             Dance.ServerSendRpc(true);
         }

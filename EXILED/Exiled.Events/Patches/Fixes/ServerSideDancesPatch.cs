@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="ServerSideDancesPatch.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="ServerSideDancesPatch.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -16,7 +16,12 @@ namespace Exiled.Events.Patches.Fixes
     using HarmonyLib;
     using Mirror;
     using PlayerRoles.PlayableScps.Scp3114;
+    using PlayerRoles.Subroutines;
     using UnityEngine;
+
+    using static HarmonyLib.AccessTools;
+
+    using Scp3114Role = API.Features.Roles.Scp3114Role;
 
     /// <summary>
     /// Patches the <see cref="Scp3114Dance.DanceVariant"/>.
@@ -34,7 +39,12 @@ namespace Exiled.Events.Patches.Fixes
             newInstructions.Add(new CodeInstruction(OpCodes.Ret));
             newInstructions[newInstructions.Count - 1].labels.Add(skip);
 
-            newInstructions.InsertRange(7, new List<CodeInstruction>()
+            int offset = 4;
+            int index = newInstructions.FindIndex(instruction => instruction.Calls(Method(typeof(SubroutineBase), nameof(SubroutineBase.ServerWriteRpc)))) + offset;
+
+            Log.Info(index);
+
+            newInstructions.InsertRange(index, new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Br_S, skip),
             });
@@ -47,10 +57,13 @@ namespace Exiled.Events.Patches.Fixes
 
         private static void Postfix(ref Scp3114Dance __instance, NetworkWriter writer)
         {
-            Npc npc = Npc.Get(__instance.Owner);
-            if (npc != null && __instance.DanceVariant != byte.MaxValue)
+            Player player = Player.Get(__instance.Owner);
+
+            Scp3114Role role = player.Role as Scp3114Role;
+
+            if (player != null && role.DanceType != API.Enums.DanceType.None)
             {
-                writer.WriteByte((byte)__instance.DanceVariant);
+                writer.WriteByte((byte)role.DanceType);
                 return;
             }
 
