@@ -40,7 +40,7 @@ namespace Exiled.Events.Patches.Fixes
             newInstructions[newInstructions.Count - 1].labels.Add(skip);
 
             int offset = 4;
-            int index = newInstructions.FindIndex(instruction => instruction.Calls(Method(typeof(SubroutineBase), nameof(SubroutineBase.ServerWriteRpc)))) + offset;
+            int index = newInstructions.FindIndex(x => x.Calls(Method(typeof(SubroutineBase), nameof(SubroutineBase.ServerWriteRpc)))) + offset;
 
             newInstructions.InsertRange(index, new List<CodeInstruction>()
             {
