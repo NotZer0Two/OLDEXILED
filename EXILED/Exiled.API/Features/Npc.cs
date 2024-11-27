@@ -5,8 +5,6 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-using CommandSystem.Commands.RemoteAdmin.Dummies;
-
 namespace Exiled.API.Features
 {
 #nullable enable
@@ -17,6 +15,7 @@ namespace Exiled.API.Features
 
     using CentralAuth;
     using CommandSystem;
+    using CommandSystem.Commands.RemoteAdmin.Dummies;
     using Exiled.API.Enums;
     using Exiled.API.Features.Components;
     using Exiled.API.Features.Roles;
@@ -74,7 +73,7 @@ namespace Exiled.API.Features
         /// Gets or sets the player being followed.
         /// </summary>
         /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
-        public Player Followed
+        public Player? Followed
         {
             get
             {
@@ -83,12 +82,13 @@ namespace Exiled.API.Features
 
                 return Player.Get(PlayerFollower._hubToFollow);
             }
+
             set
             {
                 if (PlayerFollower == null)
                     return;
 
-                PlayerFollower._hubToFollow = value.ReferenceHub;
+                PlayerFollower._hubToFollow = value?.ReferenceHub;
             }
         }
 
@@ -96,21 +96,25 @@ namespace Exiled.API.Features
         /// Gets or sets the Max Distance of the npc.
         /// </summary>
         /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
-        public float MaxDistance
+        public float? MaxDistance
         {
             get
             {
                 if (PlayerFollower == null)
-                    return 0.0f;
+                    return null;
 
                 return PlayerFollower._maxDistance;
             }
+
             set
             {
                 if (PlayerFollower == null)
                     return;
 
-                PlayerFollower._maxDistance = value;
+                if(!value.HasValue)
+                    return;
+
+                PlayerFollower._maxDistance = value.Value;
             }
         }
 
@@ -118,21 +122,25 @@ namespace Exiled.API.Features
         /// Gets or sets the Min Distance of the npc.
         /// </summary>
         /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
-        public float MinDistance
+        public float? MinDistance
         {
             get
             {
                 if (PlayerFollower == null)
-                    return 0.0f;
+                    return null;
 
                 return PlayerFollower._minDistance;
             }
+
             set
             {
                 if (PlayerFollower == null)
                     return;
 
-                PlayerFollower._minDistance = value;
+                if(!value.HasValue)
+                    return;
+
+                PlayerFollower._minDistance = value.Value;
             }
         }
 
@@ -140,21 +148,25 @@ namespace Exiled.API.Features
         /// Gets or sets the Speed of the npc.
         /// </summary>
         /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
-        public float Speed
+        public float? Speed
         {
             get
             {
                 if (PlayerFollower == null)
-                    return 0.0f;
+                    return null;
 
                 return PlayerFollower._speed;
             }
+
             set
             {
                 if (PlayerFollower == null)
                     return;
 
-                PlayerFollower._speed = value;
+                if(!value.HasValue)
+                    return;
+
+                PlayerFollower._speed = value.Value;
             }
         }
 
@@ -277,6 +289,11 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
+        /// Destroys all NPCs currently spawned.
+        /// </summary>
+        public static void DestroyAll() => DummyUtils.DestroyAllDummies();
+
+        /// <summary>
         /// Follow a specific player.
         /// </summary>
         /// <param name="player">the Player to follow.</param>
@@ -302,11 +319,6 @@ namespace Exiled.API.Features
 
             PlayerFollower.Init(player.ReferenceHub, maxDistance, minDistance, speed);
         }
-
-        /// <summary>
-        /// Destroys all NPCs currently spawned.
-        /// </summary>
-        public static void DestroyAll() => DummyUtils.DestroyAllDummies();
 
         /// <summary>
         /// Destroys the NPC.
