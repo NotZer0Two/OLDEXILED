@@ -301,9 +301,9 @@ namespace Exiled.API.Features
         public bool IsVerified { get; internal set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether the player is a NPC.
+        /// Gets a value indicating whether the player is a NPC.
         /// </summary>
-        public bool IsNPC { get; set; }
+        public bool IsNPC => ReferenceHub.IsDummy;
 
         /// <summary>
         /// Gets a value indicating whether the player has an active CustomName.

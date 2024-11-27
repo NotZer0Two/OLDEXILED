@@ -5,6 +5,8 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+using CommandSystem.Commands.RemoteAdmin.Dummies;
+
 namespace Exiled.API.Features
 {
 #nullable enable
@@ -32,6 +34,11 @@ namespace Exiled.API.Features
     /// </summary>
     public class Npc : Player
     {
+        /// <summary>
+        /// Gets or sets <see cref="PlayerFollower"/>.
+        /// </summary>
+        internal PlayerFollower PlayerFollower { get; set; }
+
         /// <inheritdoc cref="Player" />
         public Npc(ReferenceHub referenceHub)
             : base(referenceHub)
@@ -60,6 +67,94 @@ namespace Exiled.API.Features
                 base.Position = value;
                 if (Role is FpcRole fpcRole)
                     fpcRole.ClientRelativePosition = new(value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets checks if the NPC is following a Player.
+        /// </summary>
+        /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
+        public Player Followed
+        {
+            get
+            {
+                if (PlayerFollower == null)
+                    return null;
+
+                return Player.Get(PlayerFollower._hubToFollow);
+            }
+            set
+            {
+                if (PlayerFollower == null)
+                    return;
+
+                PlayerFollower._hubToFollow = value.ReferenceHub;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the Max Distance of the npc.
+        /// </summary>
+        /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
+        public float MaxDistance
+        {
+            get
+            {
+                if (PlayerFollower == null)
+                    return 0.0f;
+
+                return PlayerFollower._maxDistance;
+            }
+            set
+            {
+                if (PlayerFollower == null)
+                    return;
+
+                PlayerFollower._maxDistance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the Min Distance of the npc.
+        /// </summary>
+        /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
+        public float MinDistance
+        {
+            get
+            {
+                if (PlayerFollower == null)
+                    return 0.0f;
+
+                return PlayerFollower._minDistance;
+            }
+            set
+            {
+                if (PlayerFollower == null)
+                    return;
+
+                PlayerFollower._minDistance = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the Speed of the npc.
+        /// </summary>
+        /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
+        public float Speed
+        {
+            get
+            {
+                if (PlayerFollower == null)
+                    return 0.0f;
+
+                return PlayerFollower._speed;
+            }
+            set
+            {
+                if (PlayerFollower == null)
+                    return;
+
+                PlayerFollower._speed = value;
             }
         }
 
@@ -134,99 +229,23 @@ namespace Exiled.API.Features
         public static new Npc? Get(NetworkConnection conn) => Player.Get(conn) as Npc;
 
         /// <summary>
-        /// Docs.
-        /// </summary>
-        /// <param name="name">Docs1.</param>
-        /// <param name="role">Docs2.</param>
-        /// <param name="position">Docs3.</param>
-        /// <returns>Docs4.</returns>
-        public static Npc Create(string name, RoleTypeId role, Vector3 position)
-        {
-            // TODO: Test this.
-            Npc npc = new(DummyUtils.SpawnDummy(name))
-            {
-                IsNPC = true,
-            };
-
-            npc.Role.Set(role);
-            npc.Position = position;
-
-            return npc;
-        }
-
-        /// <summary>
         /// Spawns an NPC based on the given parameters.
         /// </summary>
         /// <param name="name">The name of the NPC.</param>
         /// <param name="role">The RoleTypeId of the NPC.</param>
-        /// <param name="id">The player ID of the NPC.</param>
-        /// <param name="userId">The userID of the NPC.</param>
-        /// <param name="position">The position to spawn the NPC.</param>
-        /// <returns>The <see cref="Npc"/> spawned.</returns>
-        [Obsolete("This method is marked as obsolete due to a bug that make player have the same id. Use Npc.Spawn(string) instead", true)]
-        public static Npc Spawn(string name, RoleTypeId role, int id = 0, string userId = PlayerAuthenticationManager.DedicatedId, Vector3? position = null)
+        /// <param name="position">The position where the NPC should spawn.</param>
+        /// <returns>Docs4.</returns>
+        public static Npc Create(string name, RoleTypeId role, Vector3 position)
         {
-            GameObject newObject = UnityEngine.Object.Instantiate(Mirror.NetworkManager.singleton.playerPrefab);
-
-            Npc npc = new(newObject)
-            {
-                IsNPC = true,
-            };
-
-            if (!RecyclablePlayerId.FreeIds.Contains(id) && RecyclablePlayerId._autoIncrement >= id)
-            {
-                Log.Warn($"{Assembly.GetCallingAssembly().GetName().Name} tried to spawn an NPC with a duplicate PlayerID. Using auto-incremented ID instead to avoid an ID clash.");
-                id = new RecyclablePlayerId(true).Value;
-            }
-
-            try
-            {
-                if (userId == PlayerAuthenticationManager.DedicatedId)
-                {
-                    npc.ReferenceHub.authManager.SyncedUserId = userId;
-                    try
-                    {
-                        npc.ReferenceHub.authManager.InstanceMode = ClientInstanceMode.DedicatedServer;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Debug($"Ignore: {e.Message}");
-                    }
-                }
-                else
-                {
-                    npc.ReferenceHub.authManager.InstanceMode = ClientInstanceMode.Unverified;
-                    npc.ReferenceHub.authManager._privUserId = userId == string.Empty ? $"Dummy@localhost" : userId;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"Ignore: {e.Message}");
-            }
-
-            try
-            {
-                npc.ReferenceHub.roleManager.InitializeNewRole(RoleTypeId.None, RoleChangeReason.None);
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"Ignore: {e.Message}");
-            }
-
-            FakeConnection fakeConnection = new(id);
-            NetworkServer.AddPlayerForConnection(fakeConnection, newObject);
-
-            npc.ReferenceHub.nicknameSync.Network_myNickSync = name;
-            Dictionary.Add(newObject, npc);
+            Npc npc = new(DummyUtils.SpawnDummy(name));
 
             Timing.CallDelayed(0.5f, () =>
             {
-                npc.Role.Set(role, SpawnReason.RoundStart, position is null ? RoleSpawnFlags.All : RoleSpawnFlags.AssignInventory);
-
-                if (position is not null)
-                    npc.Position = position.Value;
+                npc.Role.Set(role);
+                npc.Position = position;
             });
 
+            Dictionary.Add(npc.GameObject, npc);
             return npc;
         }
 
@@ -236,58 +255,11 @@ namespace Exiled.API.Features
         /// <param name="name">The name of the NPC.</param>
         /// <param name="role">The RoleTypeId of the NPC, defaulting to None.</param>
         /// <param name="ignored">Whether the NPC should be ignored by round ending checks.</param>
-        /// <param name="userId">The userID of the NPC for authentication. Defaults to the Dedicated ID.</param>
         /// <param name="position">The position where the NPC should spawn. If null, the default spawn location is used.</param>
         /// <returns>The <see cref="Npc"/> spawned.</returns>
-        public static Npc Spawn(string name, RoleTypeId role = RoleTypeId.None, bool ignored = false, string userId = PlayerAuthenticationManager.DedicatedId, Vector3? position = null)
+        public static Npc Spawn(string name, RoleTypeId role = RoleTypeId.None, bool ignored = false, Vector3? position = null)
         {
-            GameObject newObject = UnityEngine.Object.Instantiate(Mirror.NetworkManager.singleton.playerPrefab);
-
-            Npc npc = new(newObject)
-            {
-                IsNPC = true,
-            };
-
-            FakeConnection fakeConnection = new(npc.Id);
-
-            try
-            {
-                if (userId == PlayerAuthenticationManager.DedicatedId)
-                {
-                    npc.ReferenceHub.authManager.SyncedUserId = userId;
-                    try
-                    {
-                        npc.ReferenceHub.authManager.InstanceMode = ClientInstanceMode.DedicatedServer;
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Debug($"Ignore: {e.Message}");
-                    }
-                }
-                else
-                {
-                    npc.ReferenceHub.authManager.InstanceMode = ClientInstanceMode.Unverified;
-                    npc.ReferenceHub.authManager._privUserId = userId == string.Empty ? $"Dummy-{npc.Id}@localhost" : userId;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"Ignore: {e.Message}");
-            }
-
-            try
-            {
-                npc.ReferenceHub.roleManager.InitializeNewRole(RoleTypeId.None, RoleChangeReason.None);
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"Ignore: {e.Message}");
-            }
-
-            NetworkServer.AddPlayerForConnection(fakeConnection, newObject);
-
-            npc.ReferenceHub.nicknameSync.Network_myNickSync = name;
-            Dictionary.Add(newObject, npc);
+            Npc npc = new(DummyUtils.SpawnDummy(name));
 
             Timing.CallDelayed(0.5f, () =>
             {
@@ -300,17 +272,41 @@ namespace Exiled.API.Features
             if (ignored)
                 Round.IgnoredPlayers.Add(npc.ReferenceHub);
 
+            Dictionary.Add(npc.GameObject, npc);
             return npc;
+        }
+
+        /// <summary>
+        /// Follow a specific player.
+        /// </summary>
+        /// <param name="player">the Player to follow.</param>
+        public void Follow(Player player)
+        {
+            if (PlayerFollower == null)
+                PlayerFollower = ReferenceHub.gameObject.AddComponent<PlayerFollower>();
+
+            PlayerFollower.Init(player.ReferenceHub);
+        }
+
+        /// <summary>
+        /// Follow a specific player.
+        /// </summary>
+        /// <param name="player">the Player to follow.</param>
+        /// <param name="maxDistance">the max distance the npc will go.</param>
+        /// <param name="minDistance">the min distance the npc will go.</param>
+        /// <param name="speed">the speed the npc will go.</param>
+        public void Follow(Player player, float maxDistance, float minDistance, float speed = 30f)
+        {
+            if (PlayerFollower == null)
+                PlayerFollower = ReferenceHub.gameObject.AddComponent<PlayerFollower>();
+
+            PlayerFollower.Init(player.ReferenceHub, maxDistance, minDistance, speed);
         }
 
         /// <summary>
         /// Destroys all NPCs currently spawned.
         /// </summary>
-        public static void DestroyAll()
-        {
-            foreach (Npc npc in List)
-                npc.Destroy();
-        }
+        public static void DestroyAll() => DummyUtils.DestroyAllDummies();
 
         /// <summary>
         /// Destroys the NPC.
@@ -320,11 +316,8 @@ namespace Exiled.API.Features
             try
             {
                 Round.IgnoredPlayers.Remove(ReferenceHub);
-                NetworkConnectionToClient conn = ReferenceHub.connectionToClient;
-                ReferenceHub.OnDestroy();
-                CustomNetworkManager.TypedSingleton.OnServerDisconnect(conn);
-                Dictionary.Remove(GameObject);
-                Object.Destroy(GameObject);
+                Dictionary.Remove(ReferenceHub.gameObject);
+                NetworkServer.Destroy(ReferenceHub.gameObject);
             }
             catch (Exception e)
             {
