@@ -71,7 +71,7 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
-        /// Gets or sets checks if the NPC is following a Player.
+        /// Gets or sets the player being followed.
         /// </summary>
         /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
         public Player Followed
