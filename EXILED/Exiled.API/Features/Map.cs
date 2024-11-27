@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="Map.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="Map.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -43,11 +43,6 @@ namespace Exiled.API.Features
     /// </summary>
     public static class Map
     {
-        /// <summary>
-        /// A list of <see cref="PocketDimensionTeleport"/>s on the map.
-        /// </summary>
-        internal static readonly List<PocketDimensionTeleport> TeleportsValue = new(8);
-
         private static AmbientSoundPlayer ambientSoundPlayer;
 
         private static SqueakSpawner squeakSpawner;
@@ -80,15 +75,6 @@ namespace Exiled.API.Features
         public static ReadOnlyCollection<PocketDimensionTeleport> PocketDimensionTeleports { get; } = TeleportsValue.AsReadOnly();
 
         /// <summary>
-        /// Gets all <see cref="MapGeneration.Distributors.Locker"/> objects in the current map.
-        /// </summary>
-        /// <remarks>
-        /// This property is obsolete. Use <see cref="Lockers.Locker.List"/> instead to retrieve a collection of all <see cref="Locker"/> instances.
-        /// </remarks>
-        [Obsolete("Use Locker.List instead.")]
-        public static ReadOnlyCollection<MapGeneration.Distributors.Locker> Lockers { get; } = Features.Lockers.Locker.BaseToExiledLockers.Keys.ToList().AsReadOnly();
-
-        /// <summary>
         /// Gets all <see cref="AdminToy"/> objects.
         /// </summary>
         public static ReadOnlyCollection<AdminToy> Toys => AdminToy.BaseToAdminToy.Values.ToList().AsReadOnly(); // TODO: Obsolete it and make people use AdminToy.List
@@ -102,7 +88,7 @@ namespace Exiled.API.Features
             set
             {
                 if (!SeedSynchronizer.MapGenerated)
-                    SeedSynchronizer._singleton.Network_syncSeed = value;
+                    SeedSynchronizer.Seed = value;
             }
         }
 
@@ -121,12 +107,17 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets the <see cref="global::AmbientSoundPlayer"/>.
         /// </summary>
-        public static AmbientSoundPlayer AmbientSoundPlayer => ambientSoundPlayer ??= ReferenceHub.HostHub.GetComponent<AmbientSoundPlayer>();
+        public static AmbientSoundPlayer AmbientSoundPlayer => ambientSoundPlayer ??= ReferenceHub._hostHub.GetComponent<AmbientSoundPlayer>();
 
         /// <summary>
         /// Gets the <see cref="global::SqueakSpawner"/>.
         /// </summary>
         public static SqueakSpawner SqueakSpawner => squeakSpawner ??= Object.FindObjectOfType<SqueakSpawner>();
+
+        /// <summary>
+        /// Gets a list of <see cref="PocketDimensionTeleport"/>s on the map.
+        /// </summary>
+        internal static List<PocketDimensionTeleport> TeleportsValue { get; } = new();
 
         /// <summary>
         /// Broadcasts a message to all <see cref="Player">players</see>.
@@ -230,16 +221,6 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
-        /// Gets a random <see cref="MapGeneration.Distributors.Locker"/> object from the current map.
-        /// </summary>
-        /// <remarks>
-        /// This method is obsolete. Use <see cref="Features.Lockers.Locker.Random"/> instead to get a random <see cref="Locker"/> instance.
-        /// </remarks>
-        /// <returns>A randomly selected <see cref="MapGeneration.Distributors.Locker"/> object.</returns>
-        [Obsolete("Use Locker.Random() instead.")]
-        public static MapGeneration.Distributors.Locker GetRandomLocker() => Lockers.GetRandomValue();
-
-        /// <summary>
         /// Gets a random <see cref="Pickup"/>.
         /// </summary>
         /// <param name="type">Filters by <see cref="ItemType"/>.</param>
@@ -271,7 +252,7 @@ namespace Exiled.API.Features
         /// Places a Tantrum (SCP-173's ability) in the indicated position.
         /// </summary>
         /// <param name="position">The position where you want to spawn the Tantrum.</param>
-        /// <param name="isActive">Whether or not the tantrum will apply the <see cref="EffectType.Stained"/> effect.</param>
+        /// <param name="isActive">Whether the tantrum will apply the <see cref="EffectType.Stained"/> effect.</param>
         /// <remarks>If <paramref name="isActive"/> is <see langword="true"/>, the tantrum is moved slightly up from its original position. Otherwise, the collision will not be detected and the slowness will not work.</remarks>
         /// <returns>The <see cref="TantrumHazard"/> instance.</returns>
         public static TantrumHazard PlaceTantrum(Vector3 position, bool isActive = true) => TantrumHazard.PlaceTantrum(position, isActive); // TODO: Remove this.
@@ -319,7 +300,7 @@ namespace Exiled.API.Features
         /// </summary>
         /// <param name="position">The position of the blood decal.</param>
         /// <param name="direction">The direction of the blood decal.</param>
-        public static void PlaceBlood(Vector3 position, Vector3 direction) => new GunDecalMessage(position, direction, DecalPoolType.Blood).SendToAuthenticated(0);
+        public static void PlaceBlood(Vector3 position, Vector3 direction) => _ = 0; /* new GunDecalMessage(position, direction, DecalPoolType.Blood).SendToAuthenticated(0);*/ // TODO: Not finish
 
         /// <summary>
         /// Gets all the near cameras.
@@ -380,15 +361,17 @@ namespace Exiled.API.Features
         /// <param name="audioClipId">The audio clip ID to play.</param>
         public static void PlayGunSound(Vector3 position, ItemType firearmType, byte maxDistance = 45, byte audioClipId = 0)
         {
+            // TODO: Not finish
+            /*
             GunAudioMessage msg = new()
             {
                 Weapon = firearmType,
                 AudioClipId = audioClipId,
                 MaxDistance = maxDistance,
-                ShooterHub = ReferenceHub.HostHub,
+                ShooterHub = ReferenceHub._hostHub,
                 ShooterPosition = new RelativePosition(position),
             };
-            msg.SendToAuthenticated();
+            msg.SendToAuthenticated();*/
         }
 
         /// <summary>

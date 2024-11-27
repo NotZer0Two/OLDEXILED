@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="RoomType.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="RoomType.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -283,5 +283,10 @@ namespace Exiled.API.Enums
         /// Heavy Containment Elevator Zone's System B room.
         /// </summary>
         HczElevatorB,
+
+        /// <summary>
+        /// Lazy TODO.
+        /// </summary>
+        HczCrossRoomWater,
     }
 }

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="Stalking.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="Stalking.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -37,7 +37,7 @@ namespace Exiled.Events.Patches.Events.Scp106
 
             Label returnLabel = generator.DefineLabel();
             int offset = 2;
-            int index = newInstructions.FindIndex(instruction => instruction.operand == (object)PropertyGetter(typeof(Scp106StalkAbility), nameof(Scp106StalkAbility.IsActive))) + offset;
+            int index = newInstructions.FindIndex(instruction => instruction.operand == (object)PropertyGetter(typeof(Scp106StalkAbility), nameof(Scp106StalkAbility.StalkActive))) + offset;
             newInstructions.InsertRange(
                 index,
                 new CodeInstruction[]
@@ -65,10 +65,8 @@ namespace Exiled.Events.Patches.Events.Scp106
                     new(OpCodes.Brfalse_S, returnLabel),
                 });
 
-            offset = 2;
-            index = newInstructions.FindIndex(instruction => instruction.operand == (object)PropertySetter(typeof(Scp106StalkAbility), nameof(Scp106StalkAbility.IsActive))) + offset;
             newInstructions.InsertRange(
-                index,
+                newInstructions.Count - 1,
                 new CodeInstruction[]
                 {
                     // Player.Get(this.Owner);

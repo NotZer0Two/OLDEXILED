@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="Item.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="Item.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -125,47 +125,47 @@ namespace Exiled.API.Features.Items
         public float Weight => Base.Weight;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item is ammunition.
+        /// Gets a value indicating whether this item is ammunition.
         /// </summary>
         public bool IsAmmo => this is Ammo;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item is armor.
+        /// Gets a value indicating whether this item is armor.
         /// </summary>
         public bool IsArmor => this is Armor;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item is a keycard.
+        /// Gets a value indicating whether this item is a keycard.
         /// </summary>
         public bool IsKeycard => this is Keycard;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item will be destroy when being used.
+        /// Gets a value indicating whether this item will be destroy when being used.
         /// </summary>
         public bool IsConsumable => this is Consumable;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item is a throwable item.
+        /// Gets a value indicating whether this item is a throwable item.
         /// </summary>
         public bool IsThrowable => this is Throwable;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item can be used by a player.
+        /// Gets a value indicating whether this item can be used by a player.
         /// </summary>
         public bool IsUsable => this is Usable;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item is a weapon.
+        /// Gets a value indicating whether this item is a weapon.
         /// </summary>
         public bool IsWeapon => this is Firearm;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item emits light.
+        /// Gets a value indicating whether this item emits light.
         /// </summary>
         public bool IsLightEmitter => Base is ILightEmittingItem;
 
         /// <summary>
-        /// Gets a value indicating whether or not this item can be used to disarm players.
+        /// Gets a value indicating whether this item can be used to disarm players.
         /// </summary>
         public bool IsDisarmer => Base is IDisarmingItem;
 
@@ -173,6 +173,15 @@ namespace Exiled.API.Features.Items
         /// Gets the <see cref="Player"/> who owns the item.
         /// </summary>
         public Player Owner => Player.Get(Base.Owner) ?? Server.Host;
+
+        /// <summary>
+        /// Gets or sets a reason for adding this item to the inventory.
+        /// </summary>
+        public ItemAddReason AddReason
+        {
+            get => Base.ServerAddReason;
+            set => Base.ServerAddReason = value;
+        }
 
         /// <summary>
         /// Gets an existing <see cref="Item"/> or creates a new instance of one.
@@ -232,6 +241,15 @@ namespace Exiled.API.Features.Items
         /// <param name="serial">The Item serial.</param>
         /// <returns>Returns the Item found or <see langword="null"/> if not found.</returns>
         public static Item Get(ushort serial) => List.FirstOrDefault(x => x.Serial == serial);
+
+        /// <summary>
+        /// Gets the Item belonging to the specified serial.
+        /// </summary>
+        /// <param name="serial">The Item serial.</param>
+        /// <typeparam name="T">The specified <see cref="Item"/> type.</typeparam>
+        /// <returns>Returns the Item found or <see langword="null"/> if not found.</returns>
+        public static T Get<T>(ushort serial)
+            where T : Item => Get(serial) as T;
 
         /// <summary>
         /// Creates a new <see cref="Item"/> with the proper inherited subclass.

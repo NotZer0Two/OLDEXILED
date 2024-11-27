@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="Spawning.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="Spawning.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -23,7 +23,7 @@ namespace Exiled.Events.Patches.Events.Player
     using static HarmonyLib.AccessTools;
 
     /// <summary>
-    /// Patches <see cref="RoleSpawnpointManager.Init"/> delegate.
+    /// Patches <see cref="RoleSpawnpointManager"/> delegate.
     /// Adds the <see cref="Handlers.Player.Spawning"/> event.
     /// Fix for spawning in void.
     /// </summary>

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="ChangingRoleAndSpawned.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="ChangingRoleAndSpawned.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -14,16 +14,13 @@ namespace Exiled.Events.Patches.Events.Player
 
     using API.Features;
     using API.Features.Pools;
-
     using API.Features.Roles;
     using Exiled.Events.EventArgs.Player;
-
     using HarmonyLib;
-
     using InventorySystem;
+    using InventorySystem.Items;
     using InventorySystem.Items.Armor;
     using InventorySystem.Items.Pickups;
-
     using PlayerRoles;
 
     using static HarmonyLib.AccessTools;
@@ -238,7 +235,7 @@ namespace Exiled.Events.Patches.Events.Player
                 }
 
                 foreach (ItemType item in ev.Items)
-                    inventory.ServerAddItem(item);
+                    inventory.ServerAddItem(item, ItemAddReason.StartingItem);
 
                 foreach (KeyValuePair<ItemType, ushort> keyValuePair in ev.Ammo)
                     inventory.ServerAddAmmo(keyValuePair.Key, keyValuePair.Value);

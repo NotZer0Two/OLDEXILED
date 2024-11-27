@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="ChangingItem.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="ChangingItem.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -41,9 +41,8 @@ namespace Exiled.Events.Patches.Events.Player
 
             LocalBuilder ev = generator.DeclareLocal(typeof(ChangingItemEventArgs));
 
-            const int offset = 3;
-            int index = newInstructions.FindLastIndex(
-                instruction => instruction.Calls(Method(typeof(EquipDequipModifierExtensions), nameof(EquipDequipModifierExtensions.CanEquip)))) + offset;
+            int offset = 1;
+            int index = newInstructions.FindIndex(x => x.opcode == OpCodes.Bne_Un_S) + offset;
 
             newInstructions.InsertRange(
                 index,

@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="RespawningTeamEventArgs.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="RespawningTeamEventArgs.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -11,10 +11,9 @@ namespace Exiled.Events.EventArgs.Server
 
     using Exiled.API.Features;
     using Exiled.Events.EventArgs.Interfaces;
-
     using PlayerRoles;
-
     using Respawning;
+    using Respawning.Waves;
 
     /// <summary>
     /// Contains all information before spawning a wave of <see cref="SpawnableTeamType.NineTailedFox" /> or
@@ -22,7 +21,6 @@ namespace Exiled.Events.EventArgs.Server
     /// </summary>
     public class RespawningTeamEventArgs : IDeniableEvent
     {
-        private SpawnableTeamType nextKnownTeam;
         private int maximumRespawnAmount;
 
         /// <summary>
@@ -30,6 +28,9 @@ namespace Exiled.Events.EventArgs.Server
         /// </summary>
         /// <param name="players">
         /// <inheritdoc cref="Players" />
+        /// </param>
+        /// <param name="queue">
+        /// <inheritdoc cref="SpawnQueue" />
         /// </param>
         /// <param name="maxRespawn">
         /// <inheritdoc cref="MaximumRespawnAmount" />
@@ -40,14 +41,12 @@ namespace Exiled.Events.EventArgs.Server
         /// <param name="isAllowed">
         /// <inheritdoc cref="IsAllowed" />
         /// </param>
-        public RespawningTeamEventArgs(List<Player> players, int maxRespawn, SpawnableTeamType nextKnownTeam, bool isAllowed = true)
+        public RespawningTeamEventArgs(List<Player> players, Queue<RoleTypeId> queue, int maxRespawn, SpawnableWaveBase nextKnownTeam, bool isAllowed = true)
         {
             Players = players;
             MaximumRespawnAmount = maxRespawn;
-
-            this.nextKnownTeam = nextKnownTeam;
-            SpawnQueue = new();
-            SpawnableTeam.GenerateQueue(SpawnQueue, players.Count);
+            SpawnQueue = queue;
+            NextKnownTeam = nextKnownTeam;
             IsAllowed = isAllowed;
         }
 
@@ -77,33 +76,10 @@ namespace Exiled.Events.EventArgs.Server
         /// <summary>
         /// Gets or sets a value indicating what the next respawnable team is.
         /// </summary>
-        public SpawnableTeamType NextKnownTeam
-        {
-            get => nextKnownTeam;
-            set
-            {
-                nextKnownTeam = value;
-
-                if (!RespawnManager.SpawnableTeams.TryGetValue(value, out SpawnableTeamHandlerBase spawnableTeam))
-                {
-                    MaximumRespawnAmount = 0;
-                    return;
-                }
-
-                MaximumRespawnAmount = spawnableTeam.MaxWaveSize;
-                if (RespawnManager.SpawnableTeams.TryGetValue(nextKnownTeam, out SpawnableTeamHandlerBase @base))
-                    @base.GenerateQueue(SpawnQueue, Players.Count);
-            }
-        }
+        public SpawnableWaveBase NextKnownTeam { get; set; }
 
         /// <summary>
-        /// Gets the current spawnable team.
-        /// </summary>
-        public SpawnableTeamHandlerBase SpawnableTeam
-            => RespawnManager.SpawnableTeams.TryGetValue(NextKnownTeam, out SpawnableTeamHandlerBase @base) ? @base : null;
-
-        /// <summary>
-        /// Gets or sets a value indicating whether or not the spawn can occur.
+        /// Gets or sets a value indicating whether the spawn can occur.
         /// </summary>
         public bool IsAllowed { get; set; }
 

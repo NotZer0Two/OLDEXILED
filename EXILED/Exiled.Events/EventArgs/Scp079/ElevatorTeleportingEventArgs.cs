@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="ElevatorTeleportingEventArgs.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="ElevatorTeleportingEventArgs.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -40,7 +40,7 @@ namespace Exiled.Events.EventArgs.Scp079
             Player = player;
             Scp079 = player.Role.As<Scp079Role>();
             Room = Room.Get(room);
-            Lift = Lift.Get(elevatorDoor.TargetPanel.AssignedChamber);
+            Lift = Lift.Get(elevatorDoor.Chamber);
             AuxiliaryPowerCost = auxiliaryPowerCost;
             IsAllowed = auxiliaryPowerCost <= Scp079.Energy;
         }
@@ -69,8 +69,8 @@ namespace Exiled.Events.EventArgs.Scp079
         public Lift Lift { get; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether or not SCP-079 can teleport.
-        /// Defaults to a <see cref="bool" /> describing whether or not SCP-079 has enough auxiliary power to teleport.
+        /// Gets or sets a value indicating whether SCP-079 can teleport.
+        /// Defaults to a <see cref="bool" /> describing whether SCP-079 has enough auxiliary power to teleport.
         /// </summary>
         public bool IsAllowed { get; set; }
     }

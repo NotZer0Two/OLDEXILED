@@ -1,6 +1,6 @@
 // -----------------------------------------------------------------------
-// <copyright file="MapGenerated.cs" company="Exiled Team">
-// Copyright (c) Exiled Team. All rights reserved.
+// <copyright file="MapGenerated.cs" company="ExMod Team">
+// Copyright (c) ExMod Team. All rights reserved.
 // Licensed under the CC BY-SA 3.0 license.
 // </copyright>
 // -----------------------------------------------------------------------
@@ -90,9 +90,7 @@ namespace Exiled.Events.Handlers.Internal
                 }
 
                 uint baseCode = 0;
-
-                attachmentsSlots
-                    .ForEach(slot => baseCode += attachmentIdentifiers
+                attachmentsSlots.ForEach(slot => baseCode += attachmentIdentifiers
                         .Where(attachment => attachment.Slot == slot)
                         .Min(slot => slot.Code));
 
