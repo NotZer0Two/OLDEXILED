@@ -33,11 +33,6 @@ namespace Exiled.API.Features
     /// </summary>
     public class Npc : Player
     {
-        /// <summary>
-        /// Gets or sets <see cref="PlayerFollower"/>.
-        /// </summary>
-        internal PlayerFollower PlayerFollower { get; set; }
-
         /// <inheritdoc cref="Player" />
         public Npc(ReferenceHub referenceHub)
             : base(referenceHub)
@@ -73,22 +68,22 @@ namespace Exiled.API.Features
         /// Gets or sets the player being followed.
         /// </summary>
         /// <remarks>The npc must have <see cref="PlayerFollower"/>.</remarks>
-        public Player? Followed
+        public Player? FollowedPlayer
         {
             get
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return null;
 
-                return Player.Get(PlayerFollower._hubToFollow);
+                return Player.Get(follower._hubToFollow);
             }
 
             set
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return;
 
-                PlayerFollower._hubToFollow = value?.ReferenceHub;
+                follower._hubToFollow = value?.ReferenceHub;
             }
         }
 
@@ -100,21 +95,21 @@ namespace Exiled.API.Features
         {
             get
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return null;
 
-                return PlayerFollower._maxDistance;
+                return follower._maxDistance;
             }
 
             set
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return;
 
                 if(!value.HasValue)
                     return;
 
-                PlayerFollower._maxDistance = value.Value;
+                follower._maxDistance = value.Value;
             }
         }
 
@@ -126,21 +121,21 @@ namespace Exiled.API.Features
         {
             get
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return null;
 
-                return PlayerFollower._minDistance;
+                return follower._minDistance;
             }
 
             set
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return;
 
                 if(!value.HasValue)
                     return;
 
-                PlayerFollower._minDistance = value.Value;
+                follower._minDistance = value.Value;
             }
         }
 
@@ -152,21 +147,21 @@ namespace Exiled.API.Features
         {
             get
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return null;
 
-                return PlayerFollower._speed;
+                return follower._speed;
             }
 
             set
             {
-                if (PlayerFollower == null)
+                if (!TryGetComponent<>(out PlayerFollower follower))
                     return;
 
                 if(!value.HasValue)
                     return;
 
-                PlayerFollower._speed = value.Value;
+                follower._speed = value.Value;
             }
         }
 
@@ -247,7 +242,7 @@ namespace Exiled.API.Features
         /// <param name="role">The RoleTypeId of the NPC.</param>
         /// <param name="position">The position where the NPC should spawn.</param>
         /// <returns>Docs4.</returns>
-        public static Npc Create(string name, RoleTypeId role, Vector3 position)
+        public static Npc Spawn(string name, RoleTypeId role, Vector3 position)
         {
             Npc npc = new(DummyUtils.SpawnDummy(name));
 
@@ -299,10 +294,14 @@ namespace Exiled.API.Features
         /// <param name="player">the Player to follow.</param>
         public void Follow(Player player)
         {
-            if (PlayerFollower == null)
-                PlayerFollower = ReferenceHub.gameObject.AddComponent<PlayerFollower>();
+            PlayerFollower follow;
 
-            PlayerFollower.Init(player.ReferenceHub);
+            if (!TryGetComponent<>(out PlayerFollower follower))
+                follow = GameObject.AddComponent<PlayerFollower>();
+            else
+                follow = follower;
+
+            follow.Init(player.ReferenceHub);
         }
 
         /// <summary>
@@ -314,10 +313,14 @@ namespace Exiled.API.Features
         /// <param name="speed">the speed the npc will go.</param>
         public void Follow(Player player, float maxDistance, float minDistance, float speed = 30f)
         {
-            if (PlayerFollower == null)
-                PlayerFollower = ReferenceHub.gameObject.AddComponent<PlayerFollower>();
+            PlayerFollower follow;
 
-            PlayerFollower.Init(player.ReferenceHub, maxDistance, minDistance, speed);
+            if (!TryGetComponent<>(out PlayerFollower follower))
+                follow = GameObject.AddComponent<PlayerFollower>();
+            else
+                follow = follower;
+
+            follow.Init(player.ReferenceHub, maxDistance, minDistance, speed);
         }
 
         /// <summary>
