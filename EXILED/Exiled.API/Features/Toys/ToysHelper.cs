@@ -23,6 +23,7 @@ namespace Exiled.API.Features.Toys
         private static ShootingTarget sportShootingTargetObject;
         private static ShootingTarget dboyShootingTargetObject;
         private static ShootingTarget binaryShootingTargetObject;
+        private static SpeakerToy speakerObject;
 
         /// <summary>
         /// Gets the base <see cref="PrimitiveObjectToy"/> to instantiate when creating a new primitive.
@@ -136,6 +137,29 @@ namespace Exiled.API.Features.Toys
                 }
 
                 return binaryShootingTargetObject;
+            }
+        }
+
+        /// <summary>
+        /// Gets the base <see cref="Speaker"/> to instantiate when creating a new speaker.
+        /// </summary>
+        public static SpeakerToy Speaker
+        {
+            get
+            {
+                if (speakerObject is null)
+                {
+                    foreach (GameObject gameObject in NetworkClient.prefabs.Values)
+                    {
+                        if ((gameObject.name == "SpeakerToy") && gameObject.TryGetComponent(out SpeakerToy shootingTarget))
+                        {
+                            speakerObject = shootingTarget;
+                            break;
+                        }
+                    }
+                }
+
+                return speakerObject;
             }
         }
     }

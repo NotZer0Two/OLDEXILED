@@ -5,6 +5,12 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
+using System.IO;
+using UnityEngine;
+using VoiceChat;
+using VoiceChat.Networking;
+using VoiceChat.Playbacks;
+
 namespace Exiled.API.Features.Toys
 {
     using AdminToys;
@@ -79,6 +85,40 @@ namespace Exiled.API.Features.Toys
         {
             get => Base.NetworkMinDistance;
             set => Base.NetworkMinDistance = value;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Speaker"/>.
+        /// </summary>
+        /// <param name="position">The position of the <see cref="Speaker"/>.</param>
+        /// <param name="rotation">The rotation of the <see cref="Speaker"/>.</param>
+        /// <param name="scale">The scale of the <see cref="Speaker"/>.</param>
+        /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
+        /// <returns>The new <see cref="Speaker"/>.</returns>
+        public static Speaker Create(Vector3? position /*= null*/, Vector3? rotation /*= null*/, Vector3? scale /*= null*/, bool spawn /*= true*/)
+        {
+            Speaker speaker = new(UnityEngine.Object.Instantiate(ToysHelper.Speaker))
+            {
+                Position = position ?? Vector3.zero,
+                Rotation = Quaternion.Euler(rotation ?? Vector3.zero),
+                Scale = scale ?? Vector3.one,
+            };
+
+            if (spawn)
+                speaker.Spawn();
+
+            speaker.Base.Playback = new SpeakerToyPlaybackBase();
+            speaker.Base.Playback.Buffer = new PlaybackBuffer();
+
+            return speaker;
+        }
+
+        /// <summary>
+        /// Todo.
+        /// </summary>
+        public void Play()
+        {
+            // TODO
         }
     }
 }
