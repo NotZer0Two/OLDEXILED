@@ -48,7 +48,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a list of Npcs.
         /// </summary>
-        public static new List<Npc> List => Dictionary.Values.OfType<Npc>().ToList();
+        public static new IReadOnlyCollection<Npc> List => Dictionary.Values.OfType<Npc>().ToList();
 
         /// <summary>
         /// Gets or sets the player's position.
