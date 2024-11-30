@@ -36,7 +36,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a <see cref="Dictionary{TKey, TValue}"/> containing all <see cref="Player"/>'s on the server.
         /// </summary>
-        public static Dictionary<GameObject, Player> Dictionary { get; } = new(new ReferenceHub.GameObjectComparer());
+        public static new Dictionary<GameObject, Player> Dictionary { get; } = new(new ReferenceHub.GameObjectComparer());
 
         /// <inheritdoc cref="Player" />
         public Npc(ReferenceHub referenceHub)
@@ -53,7 +53,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a list of Npcs.
         /// </summary>
-        public static IReadOnlyCollection<Player> List => Dictionary.Values;
+        public static new IReadOnlyCollection<Player> List => Dictionary.Values;
 
         /// <summary>
         /// Gets or sets the player's position.
