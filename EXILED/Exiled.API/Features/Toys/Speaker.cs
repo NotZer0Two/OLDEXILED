@@ -5,11 +5,8 @@
 // </copyright>
 // -----------------------------------------------------------------------
 
-using Mirror;
-
 namespace Exiled.API.Features.Toys
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
