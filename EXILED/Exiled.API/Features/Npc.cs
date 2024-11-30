@@ -46,14 +46,9 @@ namespace Exiled.API.Features
         }
 
         /// <summary>
-        /// Gets a <see cref="Dictionary{TKey, TValue}"/> containing all <see cref="Player"/>'s on the server.
-        /// </summary>
-        public static new Dictionary<GameObject, Player> Dictionary { get; } = new(new ReferenceHub.GameObjectComparer());
-
-        /// <summary>
         /// Gets a list of Npcs.
         /// </summary>
-        public static new IReadOnlyCollection<Player> List => Dictionary.Values;
+        public static new List<Npc> List => Dictionary.Values.OfType<Npc>().ToList();
 
         /// <summary>
         /// Gets or sets the player's position.
