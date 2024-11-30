@@ -33,6 +33,11 @@ namespace Exiled.API.Features
     /// </summary>
     public class Npc : Player
     {
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey, TValue}"/> containing all <see cref="Player"/>'s on the server.
+        /// </summary>
+        public static Dictionary<GameObject, Player> Dictionary { get; } = new(new ReferenceHub.GameObjectComparer());
+
         /// <inheritdoc cref="Player" />
         public Npc(ReferenceHub referenceHub)
             : base(referenceHub)
@@ -48,7 +53,7 @@ namespace Exiled.API.Features
         /// <summary>
         /// Gets a list of Npcs.
         /// </summary>
-        public static new List<Npc> List => Player.List.OfType<Npc>().ToList();
+        public static IReadOnlyCollection<Player> List => Dictionary.Values;
 
         /// <summary>
         /// Gets or sets the player's position.
@@ -75,7 +80,10 @@ namespace Exiled.API.Features
             set
             {
                 if (!GameObject.TryGetComponent(out PlayerFollower follower))
+                {
+                    GameObject.AddComponent<PlayerFollower>()._hubToFollow = value?.ReferenceHub;
                     return;
+                }
 
                 follower._hubToFollow = value?.ReferenceHub;
             }
@@ -97,11 +105,14 @@ namespace Exiled.API.Features
 
             set
             {
-                if (!GameObject.TryGetComponent(out PlayerFollower follower))
-                    return;
-
                 if(!value.HasValue)
                     return;
+
+                if (!GameObject.TryGetComponent(out PlayerFollower follower))
+                {
+                    GameObject.AddComponent<PlayerFollower>()._maxDistance = value.Value;
+                    return;
+                }
 
                 follower._maxDistance = value.Value;
             }
@@ -123,11 +134,14 @@ namespace Exiled.API.Features
 
             set
             {
-                if (!GameObject.TryGetComponent(out PlayerFollower follower))
-                    return;
-
                 if(!value.HasValue)
                     return;
+
+                if (!GameObject.TryGetComponent(out PlayerFollower follower))
+                {
+                    GameObject.AddComponent<PlayerFollower>()._minDistance = value.Value;
+                    return;
+                }
 
                 follower._minDistance = value.Value;
             }
@@ -149,11 +163,14 @@ namespace Exiled.API.Features
 
             set
             {
-                if (!GameObject.TryGetComponent(out PlayerFollower follower))
-                    return;
-
                 if(!value.HasValue)
                     return;
+
+                if (!GameObject.TryGetComponent(out PlayerFollower follower))
+                {
+                    GameObject.AddComponent<PlayerFollower>()._speed = value.Value;
+                    return;
+                }
 
                 follower._speed = value.Value;
             }
