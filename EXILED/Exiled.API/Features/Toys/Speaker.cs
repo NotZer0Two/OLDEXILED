@@ -153,7 +153,7 @@ namespace Exiled.API.Features.Toys
         public bool Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
 
         /// <summary>
-        /// Plays an audio file using FFmpeg to decode it into raw audio data.
+        /// Plays a single audio file through the speaker system.
         /// </summary>
         /// <param name="path">The file path of the audio file.</param>
         /// <param name="volume">The desired playback volume. (0 to <see cref="float"/>) max limit.</param>
