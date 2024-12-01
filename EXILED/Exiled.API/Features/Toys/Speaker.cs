@@ -34,7 +34,6 @@ namespace Exiled.API.Features.Toys
         // private float allowedSamples;
         // private int samplesPerSecond;
         private bool stopPlayback;
-        private bool isPlaying;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
@@ -110,6 +109,11 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Gets a value indicating whether the <see cref="Speaker"/> is playing an audio or not. (Use method Stop() to stop the playback).
+        /// </summary>
+        public bool IsPlaying { get; internal set; }
+
+        /// <summary>
         /// Creates a new Speaker instance.
         /// </summary>
         /// <param name="controllerId">The controller ID for the SpeakerToy.</param>
@@ -152,7 +156,7 @@ namespace Exiled.API.Features.Toys
         public bool Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
 
         /// <summary>
-        /// Plays an audio file using FFmpeg to decode it into raw audio data.
+        /// Plays a single audio file through the speaker system.
         /// </summary>
         /// <param name="path">The file path of the audio file.</param>
         /// <param name="volume">The desired playback volume. (0 to <see cref="float"/>) max limit.</param>
@@ -162,7 +166,7 @@ namespace Exiled.API.Features.Toys
         /// <returns>A boolean indicating if playback was successful.</returns>
         public bool Play(string path, float volume, float minDistance, float maxDistance, bool destroyAfter)
         {
-            if (isPlaying)
+            if (IsPlaying)
                 Stop();
 
             if (!File.Exists(path))
@@ -175,7 +179,7 @@ namespace Exiled.API.Features.Toys
             MinDistance = minDistance;
             MaxDistance = maxDistance;
 
-            isPlaying = true;
+            IsPlaying = true;
             Timing.RunCoroutine(PlaybackRoutine(path, destroyAfter));
             return true;
         }
@@ -186,7 +190,7 @@ namespace Exiled.API.Features.Toys
         public void Stop()
         {
             stopPlayback = true;
-            isPlaying = false;
+            IsPlaying = false;
         }
 
         private IEnumerator<float> PlaybackRoutine(string filePath, bool destroyAfter)
@@ -198,55 +202,63 @@ namespace Exiled.API.Features.Toys
 
             const int sampleRate = 48000; // Enforce 48kHz
             const int channels = 1; // Enforce mono audio
-            const int frameSize = 480;
+            const int frameSize = 480; // Frame size for 10ms of audio at 48kHz
 
-            PlaybackBuffer playbackBuffer = new();
             Queue<float> streamBuffer = new();
-            float[] readBuffer = new float[(48000 / 5) + 1920];
-            float[] sendBuffer = new float[(48000 / 5) + 1920];
+            float[] readBuffer = new float[frameSize * 4];
+            float[] sendBuffer = new float[frameSize];
             byte[] encodedBuffer = new byte[512];
             OpusEncoder encoder = new(VoiceChat.Codec.Enums.OpusApplicationType.Voip);
 
-            // Decoding and playback loop
+            float playbackInterval = frameSize / (float)sampleRate;
+            float nextPlaybackTime = Timing.LocalTime;
+
             if (fileExtension == ".ogg")
             {
                 using VorbisReader vorbisReader = new(filePath);
 
-                // Validate format
                 if (vorbisReader.SampleRate != sampleRate || vorbisReader.Channels != channels)
                 {
-                    Log.Error($"Invalid OGG file. Expected 48kHz mono, got {vorbisReader.SampleRate}Hz {vorbisReader.Channels} channel(s).");
+                    Log.Error($"Invalid OGG file. Expected {sampleRate / 1000}kHz mono, got {vorbisReader.SampleRate / 1000}kHz {vorbisReader.Channels} channel(s).");
                     yield break;
                 }
 
                 Log.Info($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
 
-                while (!stopPlayback || Round.IsEnded)
+                while ((streamBuffer.Count < frameSize * 2 && !stopPlayback) || Round.IsEnded)
                 {
                     int samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
                     if (samplesRead <= 0)
-                        break; // End of file
+                        break;
 
                     foreach (float sample in readBuffer.Take(samplesRead))
                         streamBuffer.Enqueue(sample);
 
-                    while (streamBuffer.Count >= frameSize)
+                    while (!stopPlayback && streamBuffer.Count > 0)
                     {
-                        for (int i = 0; i < frameSize; i++)
-                            playbackBuffer.Write(streamBuffer.Dequeue());
-
-                        if (playbackBuffer.Length >= frameSize)
+                        if (Timing.LocalTime < nextPlaybackTime)
                         {
-                            playbackBuffer.ReadTo(sendBuffer, frameSize, 0);
-                            int dataLen = encoder.Encode(sendBuffer, encodedBuffer, frameSize);
-
-                            AudioMessage audioMessage = new(ControllerID, encodedBuffer, dataLen);
-                            audioMessage.SendToAuthenticated();
-
-                            Log.Info($"Sent {dataLen} bytes of encoded audio.");
+                            yield return Timing.WaitForOneFrame;
+                            continue;
                         }
 
-                        yield return Timing.WaitForOneFrame;
+                        for (int i = 0; i < frameSize && streamBuffer.Count > 0; i++)
+                            sendBuffer[i] = streamBuffer.Dequeue();
+
+                        int dataLen = encoder.Encode(sendBuffer, encodedBuffer);
+                        AudioMessage audioMessage = new(ControllerID, encodedBuffer, dataLen);
+                        audioMessage.SendToAuthenticated();
+
+                        Log.Debug($"Sent {dataLen} bytes of encoded audio.");
+
+                        nextPlaybackTime += playbackInterval;
+
+                        if (streamBuffer.Count < frameSize && !vorbisReader.IsEndOfStream)
+                        {
+                            samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
+                            foreach (float sample in readBuffer.Take(samplesRead))
+                                streamBuffer.Enqueue(sample);
+                        }
                     }
                 }
             }
@@ -257,8 +269,8 @@ namespace Exiled.API.Features.Toys
             }
 
             Log.Info("Playback completed.");
-            isPlaying = false;
-            if(destroyAfter)
+            IsPlaying = false;
+            if (destroyAfter)
                 Destroy();
         }
 
