@@ -147,7 +147,7 @@ namespace Exiled.API.Features.Toys
         /// Plays a single audio file through the speaker system. (No Arguments given (assuming you already preset those)).
         /// </summary>
         /// <param name="path">Path to the audio file to play.</param>
-        /// <param name="destroyAfter">Whether or not the Speaker gets destroyed after its done playing.</param>
+        /// <param name="destroyAfter">Whether the Speaker gets destroyed after it's done playing.</param>
         /// <returns>A boolean indicating if playback was successful.</returns>
         public bool Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
 
@@ -158,7 +158,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="volume">The desired playback volume. (0 to <see cref="float"/>) max limit.</param>
         /// <param name="minDistance">The minimum distance at which the audio is audible.</param>
         /// <param name="maxDistance">The maximum distance at which the audio is audible.</param>
-        /// <param name="destroyAfter">Whether or not the Speaker gets destroyed after its done playing.</param>
+        /// <param name="destroyAfter">Whether the Speaker gets destroyed after it's done playing.</param>
         /// <returns>A boolean indicating if playback was successful.</returns>
         public bool Play(string path, float volume, float minDistance, float maxDistance, bool destroyAfter)
         {
@@ -221,7 +221,7 @@ namespace Exiled.API.Features.Toys
 
                 Log.Info($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
 
-                while (!stopPlayback)
+                while (!stopPlayback || Round.IsEnded)
                 {
                     int samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
                     if (samplesRead <= 0)
