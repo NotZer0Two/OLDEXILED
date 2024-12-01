@@ -31,7 +31,6 @@ namespace Exiled.API.Features.Toys
         // private float allowedSamples;
         // private int samplesPerSecond;
         private bool stopPlayback;
-        private bool isPlaying;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Speaker"/> class.
@@ -107,6 +106,11 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Gets a value indicating whether the <see cref="Speaker"/> is playing an audio or not. (Use method Stop() to stop the playback).
+        /// </summary>
+        public bool IsPlaying { get; internal set; }
+
+        /// <summary>
         /// Creates a new Speaker instance.
         /// </summary>
         /// <param name="controllerId">The controller ID for the SpeakerToy.</param>
@@ -149,7 +153,7 @@ namespace Exiled.API.Features.Toys
         public bool Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
 
         /// <summary>
-        /// Plays an audio file using FFmpeg to decode it into raw audio data.
+        /// Plays a single audio file through the speaker system.
         /// </summary>
         /// <param name="path">The file path of the audio file.</param>
         /// <param name="volume">The desired playback volume. (0 to <see cref="float"/>) max limit.</param>
@@ -159,7 +163,7 @@ namespace Exiled.API.Features.Toys
         /// <returns>A boolean indicating if playback was successful.</returns>
         public bool Play(string path, float volume, float minDistance, float maxDistance, bool destroyAfter)
         {
-            if (isPlaying)
+            if (IsPlaying)
                 Stop();
 
             if (!File.Exists(path))
@@ -172,7 +176,7 @@ namespace Exiled.API.Features.Toys
             MinDistance = minDistance;
             MaxDistance = maxDistance;
 
-            isPlaying = true;
+            IsPlaying = true;
             Timing.RunCoroutine(PlaybackRoutine(path, destroyAfter));
             return true;
         }
@@ -183,7 +187,7 @@ namespace Exiled.API.Features.Toys
         public void Stop()
         {
             stopPlayback = true;
-            isPlaying = false;
+            IsPlaying = false;
         }
 
         // Stick please go to bed -Stick
@@ -267,7 +271,7 @@ namespace Exiled.API.Features.Toys
             }
 
             Log.Info("Playback completed.");
-            isPlaying = false;
+            IsPlaying = false;
             if (destroyAfter)
                 Destroy();
         }
