@@ -28,8 +28,6 @@ namespace Exiled.API.Features.Toys
     /// </summary>
     public class Speaker : AdminToy, IWrapper<SpeakerToy>
     {
-        // private float allowedSamples;
-        // private int samplesPerSecond;
         private bool stopPlayback;
 
         /// <summary>
@@ -111,6 +109,11 @@ namespace Exiled.API.Features.Toys
         public bool IsPlaying { get; internal set; }
 
         /// <summary>
+        /// Gets or Sets a list of players that can hear this speaker.
+        /// </summary>
+        public List<Player> BroadcastTo { get; set; }
+
+        /// <summary>
         /// Creates a new Speaker instance.
         /// </summary>
         /// <param name="controllerId">The controller ID for the SpeakerToy.</param>
@@ -125,6 +128,7 @@ namespace Exiled.API.Features.Toys
                 Position = position,
                 IsSpatial = isSpatial,
                 Base = { ControllerId = controllerId },
+                BroadcastTo = new List<Player>(),
             };
 
             if (spawn)
@@ -195,7 +199,7 @@ namespace Exiled.API.Features.Toys
             stopPlayback = false;
 
             string fileExtension = Path.GetExtension(filePath).ToLower();
-            Log.Info($"Detected file: {filePath}, Extension: {fileExtension}");
+            Log.Debug($"Detected file: {filePath}, Extension: {fileExtension}");
 
             const int sampleRate = 48000; // Enforce 48kHz
             const int channels = 1; // Enforce mono audio
@@ -220,7 +224,7 @@ namespace Exiled.API.Features.Toys
                     yield break;
                 }
 
-                Log.Info($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
+                Log.Debug($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
 
                 while ((streamBuffer.Count < frameSize * 2 && !stopPlayback) || Round.IsEnded)
                 {
@@ -244,7 +248,16 @@ namespace Exiled.API.Features.Toys
 
                         int dataLen = encoder.Encode(sendBuffer, encodedBuffer);
                         AudioMessage audioMessage = new(ControllerID, encodedBuffer, dataLen);
-                        audioMessage.SendToAuthenticated();
+
+                        if (BroadcastTo.Count <= 0)
+                        {
+                            audioMessage.SendToAuthenticated();
+                        }
+                        else
+                        {
+                            foreach (Player p in BroadcastTo)
+                                p.ReferenceHub.connectionToClient.Send(audioMessage);
+                        }
 
                         Log.Debug($"Sent {dataLen} bytes of encoded audio.");
 
@@ -265,26 +278,10 @@ namespace Exiled.API.Features.Toys
                 yield break;
             }
 
-            Log.Info("Playback completed.");
+            Log.Debug("Playback completed.");
             IsPlaying = false;
             if (destroyAfter)
                 Destroy();
         }
-
-        // Naudio Support :|
-        // private int ConvertBytesToFloats(byte[] byteBuffer, float[] floatBuffer, int bytesRead, WaveFormat waveFormat)
-        // {
-        //     int bytesPerSample = waveFormat.BitsPerSample / 8;
-        //     int sampleCount = bytesRead / bytesPerSample;
-        //
-        //     for (int i = 0; i < sampleCount; i++)
-        //     {
-        //         // Assuming 16-bit PCM data
-        //         short sample = BitConverter.ToInt16(byteBuffer, i * bytesPerSample);
-        //         floatBuffer[i] = sample / 32768f; // Normalize to -1.0 to 1.0 range
-        //     }
-        //
-        //     return sampleCount;
-        // }
     }
 }
