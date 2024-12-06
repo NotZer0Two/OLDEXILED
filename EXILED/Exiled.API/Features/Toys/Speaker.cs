@@ -13,6 +13,7 @@ namespace Exiled.API.Features.Toys
 
     using AdminToys;
     using Enums;
+    using Features;
     using Interfaces;
     using MEC;
     using NVorbis;
@@ -116,7 +117,7 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Creates a new Speaker instance.
         /// </summary>
-        /// <param name="controllerId">The controller ID for the SpeakerToy.</param>
+        /// <param name="controllerId">The ControllerId of the SpeakerToy. The ControllerId is used to find out which SpeakerToy is which while playing. If you have the same ID in two SpeakerToys, it will play the same audio file through both SpeakerToys.</param>
         /// <param name="position">The position to place the SpeakerToy.</param>
         /// <param name="isSpatial">Indicates whether the audio is spatialized.</param>
         /// <param name="spawn">Determines if the speaker should be spawned immediately.</param>
@@ -153,8 +154,7 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="path">Path to the audio file to play.</param>
         /// <param name="destroyAfter">Whether the Speaker gets destroyed after it's done playing.</param>
-        /// <returns>A boolean indicating if playback was successful.</returns>
-        public bool Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
+        public void Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
 
         /// <summary>
         /// Plays a single audio file through the speaker system.
@@ -164,8 +164,7 @@ namespace Exiled.API.Features.Toys
         /// <param name="minDistance">The minimum distance at which the audio is audible.</param>
         /// <param name="maxDistance">The maximum distance at which the audio is audible.</param>
         /// <param name="destroyAfter">Whether the Speaker gets destroyed after it's done playing.</param>
-        /// <returns>A boolean indicating if playback was successful.</returns>
-        public bool Play(string path, float volume, float minDistance, float maxDistance, bool destroyAfter)
+        public void Play(string path, float volume, float minDistance, float maxDistance, bool destroyAfter)
         {
             if (IsPlaying)
                 Stop();
@@ -173,7 +172,7 @@ namespace Exiled.API.Features.Toys
             if (!File.Exists(path))
             {
                 Log.Warn($"Tried playing audio at {path} but no file was found.");
-                return false;
+                return;
             }
 
             Volume = volume;
@@ -182,7 +181,6 @@ namespace Exiled.API.Features.Toys
 
             IsPlaying = true;
             Timing.RunCoroutine(PlaybackRoutine(path, destroyAfter));
-            return true;
         }
 
         /// <summary>
@@ -214,68 +212,63 @@ namespace Exiled.API.Features.Toys
             float playbackInterval = frameSize / (float)sampleRate;
             float nextPlaybackTime = Timing.LocalTime;
 
-            if (fileExtension == ".ogg")
-            {
-                using VorbisReader vorbisReader = new(filePath);
-
-                if (vorbisReader.SampleRate != sampleRate || vorbisReader.Channels != channels)
-                {
-                    Log.Error($"Invalid OGG file. Expected {sampleRate / 1000}kHz mono, got {vorbisReader.SampleRate / 1000}kHz {vorbisReader.Channels} channel(s).");
-                    yield break;
-                }
-
-                Log.Debug($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
-
-                while ((streamBuffer.Count < frameSize * 2 && !stopPlayback) || Round.IsEnded)
-                {
-                    int samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
-                    if (samplesRead <= 0)
-                        break;
-
-                    foreach (float sample in readBuffer.Take(samplesRead))
-                        streamBuffer.Enqueue(sample);
-
-                    while (!stopPlayback && streamBuffer.Count > 0)
-                    {
-                        if (Timing.LocalTime < nextPlaybackTime)
-                        {
-                            yield return Timing.WaitForOneFrame;
-                            continue;
-                        }
-
-                        for (int i = 0; i < frameSize && streamBuffer.Count > 0; i++)
-                            sendBuffer[i] = streamBuffer.Dequeue();
-
-                        int dataLen = encoder.Encode(sendBuffer, encodedBuffer);
-                        AudioMessage audioMessage = new(ControllerID, encodedBuffer, dataLen);
-
-                        if (BroadcastTo.Count <= 0)
-                        {
-                            audioMessage.SendToAuthenticated();
-                        }
-                        else
-                        {
-                            foreach (Player p in BroadcastTo)
-                                p.ReferenceHub.connectionToClient.Send(audioMessage);
-                        }
-
-                        Log.Debug($"Sent {dataLen} bytes of encoded audio.");
-
-                        nextPlaybackTime += playbackInterval;
-
-                        if (streamBuffer.Count < frameSize && !vorbisReader.IsEndOfStream)
-                        {
-                            samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
-                            foreach (float sample in readBuffer.Take(samplesRead))
-                                streamBuffer.Enqueue(sample);
-                        }
-                    }
-                }
-            }
-            else
+            if (fileExtension != ".ogg")
             {
                 Log.Error($"Unsupported file format: {fileExtension}");
                 yield break;
+            }
+
+            using VorbisReader vorbisReader = new(filePath);
+
+            if (vorbisReader.SampleRate != sampleRate || vorbisReader.Channels != channels)
+            {
+                Log.Error($"Invalid OGG file. Expected {sampleRate / 1000}kHz mono, got {vorbisReader.SampleRate / 1000}kHz {vorbisReader.Channels} channel(s).");
+                yield break;
+            }
+
+            Log.Debug($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
+
+            while ((streamBuffer.Count < frameSize * 2 && !stopPlayback) || Round.IsEnded)
+            {
+                int samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
+                if (samplesRead <= 0)
+                    break;
+
+                foreach (float sample in readBuffer.Take(samplesRead))
+                    streamBuffer.Enqueue(sample);
+
+                while (!stopPlayback && streamBuffer.Count > 0)
+                {
+                    if (Timing.LocalTime < nextPlaybackTime)
+                    {
+                        yield return Timing.WaitForOneFrame;
+                        continue;
+                    }
+
+                    for (int i = 0; i < frameSize && streamBuffer.Count > 0; i++)
+                        sendBuffer[i] = streamBuffer.Dequeue();
+
+                    int dataLen = encoder.Encode(sendBuffer, encodedBuffer);
+                    AudioMessage audioMessage = new(ControllerID, encodedBuffer, dataLen);
+
+                    if (BroadcastTo.Count <= 0)
+                    {
+                        audioMessage.SendToAuthenticated();
+                    }
+                    else
+                    {
+                        foreach (Player p in BroadcastTo)
+                            p.ReferenceHub.connectionToClient.Send(audioMessage);
+                    }
+
+                    nextPlaybackTime += playbackInterval;
+
+                    if (streamBuffer.Count >= frameSize || vorbisReader.IsEndOfStream)
+                        continue;
+                    samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
+                    foreach (float sample in readBuffer.Take(samplesRead))
+                        streamBuffer.Enqueue(sample);
+                }
             }
 
             Log.Debug("Playback completed.");
