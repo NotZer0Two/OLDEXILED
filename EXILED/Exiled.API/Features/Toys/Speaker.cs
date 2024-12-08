@@ -44,6 +44,11 @@ namespace Exiled.API.Features.Toys
         public SpeakerToy Base { get; }
 
         /// <summary>
+        /// Gets the prefab.
+        /// </summary>
+        public static SpeakerToy Prefab => PrefabHelper.GetPrefab<SpeakerToy>(PrefabType.SpeakerToy);
+
+        /// <summary>
         /// Gets or sets the controller ID of the SpeakerToy.
         /// </summary>
         public byte ControllerID
@@ -124,7 +129,7 @@ namespace Exiled.API.Features.Toys
         /// <returns>A new <see cref="Speaker"/> instance.</returns>
         public static Speaker Create(byte controllerId, Vector3 position, bool isSpatial = false, bool spawn = true)
         {
-            Speaker speaker = new(Object.Instantiate(ToysHelper.SpeakerBaseObject))
+            Speaker speaker = new(Object.Instantiate(Prefab))
             {
                 Position = position,
                 IsSpatial = isSpatial,
