@@ -109,7 +109,6 @@ namespace Exiled.API.Features.Toys
             set => Base.NetworkControllerId = value;
         }
 
-
         /// <summary>
         /// Gets a value indicating whether the <see cref="Speaker"/> is playing an audio or not. (Use method Stop() to stop the playback).
         /// </summary>
@@ -142,7 +141,7 @@ namespace Exiled.API.Features.Toys
 
             return speaker;
         }
-        
+
         /// <summary>
         /// Gets the <see cref="Speaker"/> associated with a given <see cref="SpeakerToy"/>.
         /// </summary>
