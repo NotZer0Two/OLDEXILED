@@ -39,14 +39,14 @@ namespace Exiled.API.Features.Toys
             : base(speakerToy, AdminToyType.Speaker) => Base = speakerToy;
 
         /// <summary>
-        /// Gets the base <see cref="SpeakerToy"/>.
-        /// </summary>
-        public SpeakerToy Base { get; }
-
-        /// <summary>
         /// Gets the prefab.
         /// </summary>
         public static SpeakerToy Prefab => PrefabHelper.GetPrefab<SpeakerToy>(PrefabType.SpeakerToy);
+
+        /// <summary>
+        /// Gets the base <see cref="SpeakerToy"/>.
+        /// </summary>
+        public SpeakerToy Base { get; }
 
         /// <summary>
         /// Gets or sets the controller ID of the SpeakerToy.
