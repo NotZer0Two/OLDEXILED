@@ -142,7 +142,7 @@ namespace Exiled.API.Features.Toys
 
             return speaker;
         }
-
+        
         /// <summary>
         /// Gets the <see cref="Speaker"/> associated with a given <see cref="SpeakerToy"/>.
         /// </summary>
