@@ -49,15 +49,6 @@ namespace Exiled.API.Features.Toys
         public SpeakerToy Base { get; }
 
         /// <summary>
-        /// Gets or sets the controller ID of the SpeakerToy.
-        /// </summary>
-        public byte ControllerID
-        {
-            get => Base.NetworkControllerId;
-            set => Base.NetworkControllerId = value;
-        }
-
-        /// <summary>
         /// Gets or sets the volume of the audio source.
         /// </summary>
         /// <value>
@@ -110,6 +101,16 @@ namespace Exiled.API.Features.Toys
         }
 
         /// <summary>
+        /// Gets or sets the controller ID of the SpeakerToy.
+        /// </summary>
+        public byte ControllerID
+        {
+            get => Base.NetworkControllerId;
+            set => Base.NetworkControllerId = value;
+        }
+
+
+        /// <summary>
         /// Gets a value indicating whether the <see cref="Speaker"/> is playing an audio or not. (Use method Stop() to stop the playback).
         /// </summary>
         public bool IsPlaying { get; internal set; }
@@ -120,21 +121,20 @@ namespace Exiled.API.Features.Toys
         public List<Player> BroadcastTo { get; set; }
 
         /// <summary>
-        /// Creates a new Speaker instance.
+        /// Creates a new <see cref="Speaker"/>.
         /// </summary>
-        /// <param name="controllerId">The ControllerId of the SpeakerToy. The ControllerId is used to find out which SpeakerToy is which while playing. If you have the same ID in two SpeakerToys, it will play the same audio file through both SpeakerToys.</param>
-        /// <param name="position">The position to place the SpeakerToy.</param>
-        /// <param name="isSpatial">Indicates whether the audio is spatialized.</param>
-        /// <param name="spawn">Determines if the speaker should be spawned immediately.</param>
-        /// <returns>A new <see cref="Speaker"/> instance.</returns>
-        public static Speaker Create(byte controllerId, Vector3 position, bool isSpatial = false, bool spawn = true)
+        /// <param name="position">The position of the <see cref="Speaker"/>.</param>
+        /// <param name="rotation">The rotation of the <see cref="Speaker"/>.</param>
+        /// <param name="scale">The scale of the <see cref="Speaker"/>.</param>
+        /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
+        /// <returns>The new <see cref="Speaker"/>.</returns>
+        public static Speaker Create(Vector3? position, Vector3? rotation, Vector3? scale, bool spawn)
         {
-            Speaker speaker = new(Object.Instantiate(Prefab))
+            Speaker speaker = new(UnityEngine.Object.Instantiate(Prefab))
             {
-                Position = position,
-                IsSpatial = isSpatial,
-                Base = { ControllerId = controllerId },
-                BroadcastTo = new List<Player>(),
+                Position = position ?? Vector3.zero,
+                Rotation = Quaternion.Euler(rotation ?? Vector3.zero),
+                Scale = scale ?? Vector3.one,
             };
 
             if (spawn)
@@ -178,7 +178,7 @@ namespace Exiled.API.Features.Toys
             {
                 Log.Warn($"Tried playing audio at {path} but no file was found.");
                 return;
-            }
+                            }
 
             Volume = volume;
             MinDistance = minDistance;
