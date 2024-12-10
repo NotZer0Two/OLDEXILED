@@ -122,18 +122,18 @@ namespace Exiled.API.Features.Toys
         /// <summary>
         /// Creates a new <see cref="Speaker"/>.
         /// </summary>
+        /// <param name="controllerId">The Identification of the <see cref="Speaker"/>. Playing two speakers with the same identification will cause them to play the same audio.</param>
         /// <param name="position">The position of the <see cref="Speaker"/>.</param>
-        /// <param name="rotation">The rotation of the <see cref="Speaker"/>.</param>
-        /// <param name="scale">The scale of the <see cref="Speaker"/>.</param>
+        /// <param name="isSpatial">Whether the <see cref="Speaker"/> should be a 3d spaced audio, or a 2d spaced audio.</param>
         /// <param name="spawn">Whether the <see cref="Speaker"/> should be initially spawned.</param>
         /// <returns>The new <see cref="Speaker"/>.</returns>
-        public static Speaker Create(Vector3? position, Vector3? rotation, Vector3? scale, bool spawn)
+        public static Speaker Create(byte controllerId, Vector3? position, bool isSpatial, bool spawn)
         {
-            Speaker speaker = new(UnityEngine.Object.Instantiate(Prefab))
+            Speaker speaker = new(Object.Instantiate(Prefab))
             {
                 Position = position ?? Vector3.zero,
-                Rotation = Quaternion.Euler(rotation ?? Vector3.zero),
-                Scale = scale ?? Vector3.one,
+                IsSpatial = isSpatial,
+                Base = { ControllerId = controllerId },
             };
 
             if (spawn)
@@ -158,17 +158,20 @@ namespace Exiled.API.Features.Toys
         /// </summary>
         /// <param name="path">Path to the audio file to play.</param>
         /// <param name="destroyAfter">Whether the Speaker gets destroyed after it's done playing.</param>
-        public void Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, destroyAfter);
+        /// <returns>Return's whether the path was correct or not.</returns>
+        public bool Play(string path, bool destroyAfter = false) => Play(path, Volume, MinDistance, MaxDistance, BroadcastTo, destroyAfter);
 
         /// <summary>
         /// Plays a single audio file through the speaker system.
         /// </summary>
         /// <param name="path">The file path of the audio file.</param>
         /// <param name="volume">The desired playback volume. (0 to <see cref="float"/>) max limit.</param>
-        /// <param name="minDistance">The minimum distance at which the audio is audible.</param>
+        /// <param name="minDistance">The minimum distance at which the audio's max volume is able to be heard.</param>
         /// <param name="maxDistance">The maximum distance at which the audio is audible.</param>
+        /// <param name="playersToPlayTo">Whether to play it to a specific list of players. Keep null if you want to play it to all.</param>
         /// <param name="destroyAfter">Whether the Speaker gets destroyed after it's done playing.</param>
-        public void Play(string path, float volume, float minDistance, float maxDistance, bool destroyAfter)
+        /// <returns>Return's whether the inputted path was correct or not.</returns>
+        public bool Play(string path, float volume, float minDistance, float maxDistance, List<Player> playersToPlayTo = null, bool destroyAfter = false)
         {
             if (IsPlaying)
                 Stop();
@@ -176,15 +179,17 @@ namespace Exiled.API.Features.Toys
             if (!File.Exists(path))
             {
                 Log.Warn($"Tried playing audio at {path} but no file was found.");
-                return;
+                return false;
             }
 
             Volume = volume;
             MinDistance = minDistance;
             MaxDistance = maxDistance;
+            BroadcastTo = playersToPlayTo;
 
             IsPlaying = true;
             Timing.RunCoroutine(PlaybackRoutine(path, destroyAfter));
+            return true;
         }
 
         /// <summary>
@@ -232,7 +237,7 @@ namespace Exiled.API.Features.Toys
 
             Log.Debug($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
 
-            while (streamBuffer.Count < frameSize * 2 && !stopPlayback)
+            while (streamBuffer.Count < frameSize * 2 && !stopPlayback && Base.gameObject != null)
             {
                 int samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
                 if (samplesRead <= 0)
@@ -255,15 +260,8 @@ namespace Exiled.API.Features.Toys
                     int dataLen = encoder.Encode(sendBuffer, encodedBuffer);
                     AudioMessage audioMessage = new(ControllerID, encodedBuffer, dataLen);
 
-                    if (BroadcastTo.Count <= 0)
-                    {
-                        audioMessage.SendToAuthenticated();
-                    }
-                    else
-                    {
-                        foreach (Player p in BroadcastTo)
-                            p.ReferenceHub.connectionToClient.Send(audioMessage);
-                    }
+                    foreach (Player p in BroadcastTo ?? Player.List)
+                        p.ReferenceHub.connectionToClient.Send(audioMessage);
 
                     nextPlaybackTime += playbackInterval;
 
@@ -277,7 +275,7 @@ namespace Exiled.API.Features.Toys
 
             Log.Debug("Playback completed.");
             IsPlaying = false;
-            if (destroyAfter)
+            if (destroyAfter && Base.gameObject != null)
                 Destroy();
         }
     }
