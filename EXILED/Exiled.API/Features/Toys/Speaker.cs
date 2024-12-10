@@ -149,8 +149,8 @@ namespace Exiled.API.Features.Toys
         /// <returns>The corresponding Speaker instance.</returns>
         public static Speaker Get(SpeakerToy speakerToy)
         {
-            AdminToy adminToy = Map.Toys.FirstOrDefault(x => x.AdminToyBase == speakerToy);
-            return adminToy is not null ? adminToy as Speaker : new Speaker(speakerToy);
+            AdminToy adminToy = List.FirstOrDefault(x => x.AdminToyBase == speakerToy);
+            return adminToy is not null ? adminToy as Speaker : new(speakerToy);
         }
 
         /// <summary>
