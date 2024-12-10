@@ -177,7 +177,7 @@ namespace Exiled.API.Features.Toys
             {
                 Log.Warn($"Tried playing audio at {path} but no file was found.");
                 return;
-                            }
+            }
 
             Volume = volume;
             MinDistance = minDistance;
@@ -232,7 +232,7 @@ namespace Exiled.API.Features.Toys
 
             Log.Debug($"Playing OGG file with Sample Rate: {sampleRate}, Channels: {channels}");
 
-            while ((streamBuffer.Count < frameSize * 2 && !stopPlayback) || Round.IsEnded)
+            while (streamBuffer.Count < frameSize * 2 && !stopPlayback)
             {
                 int samplesRead = vorbisReader.ReadSamples(readBuffer, 0, readBuffer.Length);
                 if (samplesRead <= 0)
